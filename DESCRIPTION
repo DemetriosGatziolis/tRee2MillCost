@@ -1,0 +1,18 @@
+Package: tRee2MillCost
+Version: 2.0.0
+Date: 2026-08-25
+Title: Road network travel cost assessment and optimization
+Authors@R: person("Demetrios", "Gatziolis", role = c("aut", "cre"),
+                  email = "demetrios.gatziolis@usda.gov",
+                  comment = c(ORCID = "0000-0002-3955-8875"))
+Author: Demetrios Gatziolis [aut, cre]
+Maintainer: Demetrios Gatziolis <demetrios.gatziolis@usda.gov>
+Description: A collection of functions that support the calculation of cost for woody material transportation from forestland to processing facilities.
+License: GPL (>= 3)
+LazyLoad: yes
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Config/roxygen2/version: 8.1.0
+Depends: R (>= 4.0.0)
+Imports: terra, sf, foreach, snow, doSNOW, cppRouting, parallel, RcppParallel, Rcpp, tiff, gdalUtilities, tools, RANN, magick
+LinkingTo: Rcpp
