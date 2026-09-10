@@ -1,0 +1,6 @@
+pandoc: 3.6.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  tRee2MillCost_vignette: tRee2MillCost_vignette.html
+last_built: 2026-09-09T22:09Z
