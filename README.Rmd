@@ -130,6 +130,21 @@ library( tRee2MillCost )
 library( terra )
 ```
 
+```{r}
+# Consider quitting all other applications to conserve memory and altering the
+# default RAM settings (maximum available = 16GB, percentage of maximum that can
+# be used = 50) in the terra package.
+# Determine how much RAM is available with the default terra package settings
+free_RAM()
+# Assuming your system has 64GB of total physical RAM, set the maximum terra can
+# use to 50GB, and make 90% of the maximum (45GB) available to the workflow.
+# Adjust these setting to the hardwork configuration of your system
+terraOptions( memmax=50, memfrac=0.9 )
+# Display the available RAM after the updated settings took effect
+free_RAM()
+# 45GB of that amount will be available to functions of the terra package
+```
+
 ```{r, results='hide'}
 # All spatial data must share the same projected coordinate system with
 # linear unit either in meters or feet. Unprojected or geographic

@@ -71,7 +71,7 @@
                         <h4 data-toc-skip class="author">Demetrios
 Gatziolis</h4>
             
-            <h4 data-toc-skip class="date">2026-09-10</h4>
+            <h4 data-toc-skip class="date">2026-09-17</h4>
       
       <small class="dont-index">Source: <a href="NA/NA/NA/blob/HEAD/vignettes/tRee2MillCost_vignette.Rmd"><code>vignettes/tRee2MillCost_vignette.Rmd</code></a></small>
       <div class="hidden name"><code>tRee2MillCost_vignette.Rmd</code></div>
@@ -81,7 +81,7 @@ Gatziolis</h4>
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">tRee2MillCost</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/tRee2MillCost" class="external-link">tRee2MillCost</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="package-description">Package description<a class="anchor" aria-label="anchor" href="#package-description"></a>
 </h2>
@@ -223,9 +223,24 @@ raster to integer type</li>
 <h2 id="workflow-example">Workflow example<a class="anchor" aria-label="anchor" href="#workflow-example"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span> <span class="va">tRee2MillCost</span> <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span> <span class="va"><a href="https://github.com/tRee2MillCost" class="external-link">tRee2MillCost</a></span> <span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span> <span class="va"><a href="https://rspatial.org/" class="external-link">terra</a></span> <span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Consider quitting all other applications to conserve memory and altering the</span></span>
+<span><span class="co"># default RAM settings (maximum available = 16GB, percentage of maximum that can</span></span>
+<span><span class="co"># be used = 50) in the terra package.</span></span>
+<span><span class="co"># Determine how much RAM is available with the default terra package settings</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/mem.html" class="external-link">free_RAM</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 16777216</span></span>
+<span><span class="co"># Assuming your system has 64GB of total physical RAM, set the maximum terra can</span></span>
+<span><span class="co"># use to 50GB, and make 90% of the maximum (45GB) available to the workflow.</span></span>
+<span><span class="co"># Adjust these setting to the hardwork configuration of your system</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/terraOptions.html" class="external-link">terraOptions</a></span><span class="op">(</span> memmax<span class="op">=</span><span class="fl">50</span>, memfrac<span class="op">=</span><span class="fl">0.9</span> <span class="op">)</span></span>
+<span><span class="co"># Display the available RAM after the updated settings took effect</span></span>
+<span><span class="fu"><a href="https://rspatial.github.io/terra/reference/mem.html" class="external-link">free_RAM</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 52428800</span></span>
+<span><span class="co"># 45GB of that amount will be available to functions of the terra package</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># All spatial data must share the same projected coordinate system with</span></span>
 <span><span class="co"># linear unit either in meters or feet. Unprojected or geographic</span></span>
 <span><span class="co"># coordinate systems (longitude/latitude) cannot be used</span></span>
@@ -267,8 +282,6 @@ raster to integer type</li>
 <span>             <span class="va">movedToPath</span>, <span class="va">movedFromPath</span>,</span>
 <span>             <span class="va">costType</span>,</span>
 <span>             <span class="va">costCSVpath</span> <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: </span></span>
-<span><span class="co">#&gt; cost_matrix.csv already exists, likely from a previous run, and will be overwritten</span></span>
 <span></span>
 <span><span class="co"># Convert the vector representation of the road network to raster</span></span>
 <span><span class="co"># Specify rdField so that future cost computations will be travel time-based</span></span>
@@ -308,7 +321,7 @@ raster to integer type</li>
 <span></span>
 <span><span class="co"># Save the cost matrix to the disk</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span> <span class="va">cost.df</span>, <span class="va">costCSVpath</span>, row.names<span class="op">=</span><span class="cn">FALSE</span> <span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Summarize travel time for plots that moved from their original location to</span></span>
 <span><span class="co"># the road network by no more than 500m and then routed on-network to the</span></span>
 <span><span class="co"># closest mill in no more than 30 minutes (0.5 hours)</span></span>
@@ -335,7 +348,7 @@ raster to integer type</li>
 <span><span class="co">#&gt; 1 Mount Vermion Industries         6    0.302      0.318  0.171</span></span>
 <span><span class="co">#&gt; 2          Mt Athos Lumber         3    0.394      0.411  0.060</span></span>
 <span><span class="co">#&gt; 3     Pangaion Hills Fibre         3    0.271      0.268  0.049</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create and plot a 30-minute isochrone raster for one of the mills</span></span>
 <span><span class="va">millName</span> <span class="op">&lt;-</span> <span class="st">"Mount Vermion Industries"</span></span>
 <span><span class="va">sel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html" class="external-link">vect</a></span><span class="op">(</span> <span class="va">movedToPath</span> <span class="op">)</span> <span class="op">)</span><span class="op">[</span>, <span class="va">toField</span><span class="op">]</span> <span class="op">==</span> <span class="va">millName</span></span>
@@ -354,7 +367,7 @@ raster to integer type</li>
 <span>      main<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"30-minute isochrone from"</span>, <span class="va">millName</span>, <span class="st">"\n"</span><span class="op">)</span> <span class="op">)</span></span>
 <span><span class="fu"><a href="https://rspatial.github.io/terra/reference/lines.html" class="external-link">points</a></span><span class="op">(</span> <span class="va">mill</span>, pch<span class="op">=</span><span class="fl">16</span>, cex<span class="op">=</span><span class="fl">2</span>, col<span class="op">=</span><span class="st">"white"</span> <span class="op">)</span></span></code></pre></div>
 <p><img src="tRee2MillCost_vignette_files/figure-html/iso-1.png" class="r-plt" alt="" width="90%"></p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Determine and plot the routes for all plots to a mill</span></span>
 <span><span class="va">plots</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rspatial.github.io/terra/reference/vect.html" class="external-link">vect</a></span><span class="op">(</span> <span class="va">movedFromPath</span> <span class="op">)</span></span>
 <span><span class="va">plotIDs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span> <span class="va">plots</span><span class="op">[</span>, <span class="va">fromField</span><span class="op">]</span> <span class="op">)</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
