@@ -15,81 +15,101 @@ checkInputs(
   roadRasterName,
   movedToName,
   movedFromName,
-  outCSVName
+  costType,
+  costCSVName
 )
 }
 \arguments{
-\item{rdName}{filename/path (character) of a line vector file representing
+\item{rdName}{character, filename/path of a line vector layer representing
 the road network}
 
-\item{rdField}{name (character) of column expected to be present in
-\emph{rdName} and containing the speed limits of each road segment}
+\item{rdField}{character, name of column expected to be present in
+\emph{rdName} (only if \emph{costType} = 1) representing the expected travel
+speed of each road segment}
 
-\item{toName}{filename/path (character) of a point vector file representing
+\item{toName}{character, filename/path of a point vector layer representing
 travel destinations}
 
-\item{toField}{name (character) of column expected to be present in
+\item{toField}{charcter, name of column expected to be present in
 \emph{toName} as travel destination identifier}
 
-\item{fromName}{filename/path (character) of a point vector file representing
+\item{fromName}{character, filename/path of a point vector layer representing
 travel origin or start location identifier}
 
-\item{fromField}{name (character) of column expected to be present in
-fromName as travel origin or start location identifier}
+\item{fromField}{character, name of column expected to be present in
+\emph{fromName} as travel origin or start location identifier}
 
 \item{rasterResolution}{numeric, the resolution of the raster that will
 represent the road network in the length unit of the projection used}
 
-\item{roadRasterName}{filename (character) of the road raster. TIFF format
-and .tif extenstion is expected}
+\item{roadRasterName}{character filename/path of the road raster. TIFF format
+and .tif extension is expected}
 
-\item{movedToName}{filename/path (character) of locations where travel
-destinations in \emph{toName} will be moved to be on the network}
+\item{movedToName}{character, filename/path of a layer representing locations
+where travel destinations in \emph{toName} will be moved to be on the
+network. Geopackage format is expected}
 
-\item{movedFromName}{filename/path (character) of the locations where travel
-origins in \emph{fromName} will be moved to be on the network}
+\item{movedFromName}{character, filename/path of a layer representing
+locations where travel origins in \emph{fromName} will be moved to be on the
+network. Geopackage format is expected}
 
-\item{outCSVName}{filename/path (character) of the travel cost matrix between
+\item{costType}{integer, 1 for travel calculations based on time, 2 for
+travel calculations based on distance}
+
+\item{costCSVName}{character, filename/path of the travel cost matrix between
 travel origins and destinations. .csv extension is expected}
 }
 \description{
-Examines compliance of data and parameter values with settings and
-expectations of this package. The intended workflow relies on a vector
-representation of a road network (\emph{rdName}) and two sets of point
-vectors, the first denoting travel destination or end locations
-(\emph{toName}) and the second travel origin or start locations
-(\emph{fromName}). Each of these three spatial data layers must contain a
-field or data attribute column named \emph{rdField}, \emph{toField}, and
-\emph{fromField} respectively
+Examines data and parameter values with settings and expectations of this
+package. The intended workflow relies on a vector representation of a road
+network (\emph{rdName}) and two sets of point layers, the first denoting
+travel destination or end locations (\emph{toName}) and the second travel
+origin or start locations (\emph{fromName}). \emph{toName} and
+\emph{fromName} must contain a field or data attribute column named
+\emph{toField} and \emph{fromField} respectively. \emph{rdName} must contain
+a field name \emph{rdField} only if \emph{costType} is set to 1 (travel cost
+expressed in time)
 }
 \details{
-The values in \emph{toField} and \emph{fromField} must be unique.
-\emph{rdField} values should be positive and expressed in miles per hour,
-even if the linear unit of the projection shared by \emph{rdName},
-\emph{toName}, and \emph{fromName} is in feet. The resolution of the raster
-representation of the road network should not be
-excessively fine (<5m or ~15ft) nor too coarse (>50m or ~164ft). Fine
+The values in \emph{toField} and \emph{fromField} must be unique. If
+\emph{rdField} is required (\emph{costType} = 1), its values should be
+positive and expressed in miles per hour, even if the linear unit of the
+projection shared by \emph{rdName}, \emph{toName}, and \emph{fromName} is in
+feet. The resolution of the raster representation of the road network should
+not be excessively fine (<5m or ~15ft) nor too coarse (>50m or ~164ft). Fine
 resolutions do not improve the information content of the raster network
-representation and invariably lead to network renditions with unwarrantedly
-large number of raster cells or graph nodes likely to exhaust the hardware
-resources of the computing platform and result in prolonged processing time.
-Coarse resolutions tend to connect road network segments that are proximal
-(at the landscape scale) but not actually connected, thereby yielding an
-underestimation of travel time. An example of the latter would two roads
-along opposite sides of a river without a bridge between them.
+representation and often lead to network renditions with unwarrantedly large
+number of raster cells or graph nodes likely to exhaust hardware resources of
+computing platforms and result in prolonged processing time. Coarse
+resolutions tend to connect road network segments that are proximal but not
+actually connected, thereby yielding an underestimation of travel time. An
+example of the latter would be two roads along opposite sides of a river
+without a bridge between them
 
 \emph{rdField}, \emph{toField}, and \emph{fromField} are case sensitive
 }
 \examples{
 \dontrun{
-checkInputs(rdName = "roads.gpkg", rdField = "MPH",
-      toName = "mills.gpkg", toField = "COMPANY_NAME",
-      fromName = "sample.gpkg", fromField = "sampleID",
-      rasterResolution = 20,
-      roadRasterName = "road_net.tif",
-      movedToName = "moved_mills_gpkg",
-      movedFromName = "moved_samples.gpkg",
-      outCSVName = "cost_matrix.csv" )
+rdName    <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+fromName  <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+fromField <- "sampleID"
+toName    <- system.file( "extdata", "mills.gpkg", package="tRee2MillCost" )
+toField   <- "COMPANY_NAME"
+rasterResolution <- 20 # implies meters, the linear unit of the projection
+                       # in rdName, fromName, and toName
+roadRasterName = "road_net.tif"
+movedToName   <- "moved_mills.gpkg"
+movedFromName <- "moved_roads.gpkg"
+costType      <- 1 # cost as travel time
+costCSVName   <- "cost_matrix.csv"
+
+checkInputs( rdName, rdField,
+             toName, toField,
+             fromName, fromField,
+             rasterResolution,
+             roadRasterName,
+             movedToName, movedFromName,
+             costType, costCSVName )
 }
 
 }

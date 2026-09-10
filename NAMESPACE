@@ -19,5 +19,13 @@ export(rcpp_buildNodeDF)
 export(reportTime)
 export(setCellValueToInteger)
 importFrom(Rcpp,sourceCpp)
-importFrom(foreach,"%dopar%")
+importFrom(doSNOW,registerDoSNOW)
+importFrom(foreach,
+  "%dopar%",
+  foreach
+)
+importFrom(snow,
+  makeCluster,
+  stopCluster
+)
 useDynLib(tRee2MillCost, .registration = TRUE)

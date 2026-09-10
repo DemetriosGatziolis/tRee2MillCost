@@ -26,11 +26,15 @@ using namespace Rcpp;
 //'
 //' @export
 // [[Rcpp::export]]
- DataFrame rcpp_buildNodeDF(IntegerMatrix m, double cellSize, double linearUnitFactor) {
+ DataFrame rcpp_buildNodeDF(IntegerMatrix m, double cellSize, double linearUnitFactor, int costType) {
 
    int nc = m.ncol();
    int nr = m.nrow();
    int r, c;
+
+   if(costType != 1 && costType != 2) {
+     Rcpp::stop("\ncostType in rcpp_buildNodeDF should be either 1 (travel time) or 2 (travel distance)\n");
+   }
 
    int sumNW=0, sumN=0, sumNE=0, sumW=0;
 #pragma omp parallel for private(r, c) shared(m) reduction(+:sumNW, sumN, sumNE, sumW)
@@ -98,13 +102,22 @@ using namespace Rcpp;
      }
    }
 
-   double scaleValue = 3600.0 * cellSize * linearUnitFactor * 2.0 / 1609.34;
    int j;
+   double scaleValue;
 
+   if(costType == 1) { // travel time, output data frame cost would be seconds
+     scaleValue = 3600.0 * cellSize * linearUnitFactor * 2.0 / 1609.34;
 #pragma omp parallel for private(j)
-   for(j=0; j<nSegments; j++) {
-     costVec(j) = scaleValue * costVec(j) /
-       (m(fromNodeRowVec(j), fromNodeColVec(j)) + m(toNodeRowVec(j), toNodeColVec(j)));
+     for(j=0; j<nSegments; j++) {
+       costVec(j) = scaleValue * costVec(j) /
+         (m(fromNodeRowVec(j), fromNodeColVec(j)) + m(toNodeRowVec(j), toNodeColVec(j)));
+     }
+   } else { // travel distance, output data frame cost would be meters
+     scaleValue = cellSize * linearUnitFactor;
+#pragma omp parallel for private(j)
+     for(j=0; j<nSegments; j++) {
+       costVec(j) = scaleValue * costVec(j);
+     }
    }
 
    NumericVector terraFromID(nSegments);

@@ -1,66 +1,83 @@
 #' @title Examine parameters and data
 #'
 #' @description
-#' Examines compliance of data and parameter values with settings and
-#' expectations of this package. The intended workflow relies on a vector
-#' representation of a road network (\emph{rdName}) and two sets of point
-#' vectors, the first denoting travel destination or end locations
-#' (\emph{toName}) and the second travel origin or start locations
-#' (\emph{fromName}). Each of these three spatial data layers must contain a
-#' field or data attribute column named \emph{rdField}, \emph{toField}, and
-#' \emph{fromField} respectively
+#' Examines data and parameter values with settings and expectations of this
+#' package. The intended workflow relies on a vector representation of a road
+#' network (\emph{rdName}) and two sets of point layers, the first denoting
+#' travel destination or end locations (\emph{toName}) and the second travel
+#' origin or start locations (\emph{fromName}). \emph{toName} and
+#' \emph{fromName} must contain a field or data attribute column named
+#' \emph{toField} and \emph{fromField} respectively. \emph{rdName} must contain
+#' a field name \emph{rdField} only if \emph{costType} is set to 1 (travel cost
+#' expressed in time)
 #'
-#' @details The values in \emph{toField} and \emph{fromField} must be unique.
-#' \emph{rdField} values should be positive and expressed in miles per hour,
-#' even if the linear unit of the projection shared by \emph{rdName},
-#' \emph{toName}, and \emph{fromName} is in feet. The resolution of the raster
-#' representation of the road network should not be
-#' excessively fine (<5m or ~15ft) nor too coarse (>50m or ~164ft). Fine
+#' @param rdName character, filename/path of a line vector layer representing
+#' the road network
+#' @param rdField character, name of column expected to be present in
+#' \emph{rdName} (only if \emph{costType} = 1) representing the expected travel
+#' speed of each road segment
+#' @param toName character, filename/path of a point vector layer representing
+#' travel destinations
+#' @param toField charcter, name of column expected to be present in
+#' \emph{toName} as travel destination identifier
+#' @param fromName character, filename/path of a point vector layer representing
+#' travel origin or start location identifier
+#' @param fromField character, name of column expected to be present in
+#' \emph{fromName} as travel origin or start location identifier
+#' @param rasterResolution numeric, the resolution of the raster that will
+#' represent the road network in the length unit of the projection used
+#' @param roadRasterName character filename/path of the road raster. TIFF format
+#' and .tif extension is expected
+#' @param movedToName character, filename/path of a layer representing locations
+#' where travel destinations in \emph{toName} will be moved to be on the
+#' network. Geopackage format is expected
+#' @param movedFromName character, filename/path of a layer representing
+#' locations where travel origins in \emph{fromName} will be moved to be on the
+#' network. Geopackage format is expected
+#' @param costType integer, 1 for travel calculations based on time, 2 for
+#' travel calculations based on distance
+#' @param costCSVName character, filename/path of the travel cost matrix between
+#' travel origins and destinations. .csv extension is expected
+#'
+#' @details The values in \emph{toField} and \emph{fromField} must be unique. If
+#' \emph{rdField} is required (\emph{costType} = 1), its values should be
+#' positive and expressed in miles per hour, even if the linear unit of the
+#' projection shared by \emph{rdName}, \emph{toName}, and \emph{fromName} is in
+#' feet. The resolution of the raster representation of the road network should
+#' not be excessively fine (<5m or ~15ft) nor too coarse (>50m or ~164ft). Fine
 #' resolutions do not improve the information content of the raster network
-#' representation and invariably lead to network renditions with unwarrantedly
-#' large number of raster cells or graph nodes likely to exhaust the hardware
-#' resources of the computing platform and result in prolonged processing time.
-#' Coarse resolutions tend to connect road network segments that are proximal
-#' (at the landscape scale) but not actually connected, thereby yielding an
-#' underestimation of travel time. An example of the latter would two roads
-#' along opposite sides of a river without a bridge between them.
+#' representation and often lead to network renditions with unwarrantedly large
+#' number of raster cells or graph nodes likely to exhaust hardware resources of
+#' computing platforms and result in prolonged processing time. Coarse
+#' resolutions tend to connect road network segments that are proximal but not
+#' actually connected, thereby yielding an underestimation of travel time. An
+#' example of the latter would be two roads along opposite sides of a river
+#' without a bridge between them
 #'
 #' \emph{rdField}, \emph{toField}, and \emph{fromField} are case sensitive
 #'
-#' @param rdName filename/path (character) of a line vector file representing
-#' the road network
-#' @param rdField name (character) of column expected to be present in
-#' \emph{rdName} and containing the speed limits of each road segment
-#' @param toName filename/path (character) of a point vector file representing
-#' travel destinations
-#' @param toField name (character) of column expected to be present in
-#' \emph{toName} as travel destination identifier
-#' @param fromName filename/path (character) of a point vector file representing
-#' travel origin or start location identifier
-#' @param fromField name (character) of column expected to be present in
-#' fromName as travel origin or start location identifier
-#' @param rasterResolution numeric, the resolution of the raster that will
-#' represent the road network in the length unit of the projection used
-#' @param roadRasterName filename (character) of the road raster. TIFF format
-#' and .tif extenstion is expected
-#'
-#' @param movedToName filename/path (character) of locations where travel
-#' destinations in \emph{toName} will be moved to be on the network
-#' @param movedFromName filename/path (character) of the locations where travel
-#' origins in \emph{fromName} will be moved to be on the network
-#' @param outCSVName filename/path (character) of the travel cost matrix between
-#' travel origins and destinations. .csv extension is expected
-#'
 #' @examples
 #' \dontrun{
-#' checkInputs(rdName = "roads.gpkg", rdField = "MPH",
-#'       toName = "mills.gpkg", toField = "COMPANY_NAME",
-#'       fromName = "sample.gpkg", fromField = "sampleID",
-#'       rasterResolution = 20,
-#'       roadRasterName = "road_net.tif",
-#'       movedToName = "moved_mills_gpkg",
-#'       movedFromName = "moved_samples.gpkg",
-#'       outCSVName = "cost_matrix.csv" )
+#' rdName    <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' fromName  <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+#' fromField <- "sampleID"
+#' toName    <- system.file( "extdata", "mills.gpkg", package="tRee2MillCost" )
+#' toField   <- "COMPANY_NAME"
+#' rasterResolution <- 20 # implies meters, the linear unit of the projection
+#'                        # in rdName, fromName, and toName
+#' roadRasterName = "road_net.tif"
+#' movedToName   <- "moved_mills.gpkg"
+#' movedFromName <- "moved_roads.gpkg"
+#' costType      <- 1 # cost as travel time
+#' costCSVName   <- "cost_matrix.csv"
+#'
+#' checkInputs( rdName, rdField,
+#'              toName, toField,
+#'              fromName, fromField,
+#'              rasterResolution,
+#'              roadRasterName,
+#'              movedToName, movedFromName,
+#'              costType, costCSVName )
 #' }
 #'
 #' @export
@@ -69,7 +86,8 @@ checkInputs <- function( rdName, rdField,
                          fromName, fromField,
                          rasterResolution, roadRasterName,
                          movedToName, movedFromName,
-                         outCSVName ) {
+                         costType,
+                         costCSVName ) {
 
   ## input spatial info
   s      <- c( rdName, toName, fromName )
@@ -111,7 +129,7 @@ checkInputs <- function( rdName, rdField,
     compareList[[j]] <- shpInfo
   }
   ## does projection support terra::linearUnits()?
-  unit <- terra::linearUnits( terra::rast( crs=terra::crs(compareList[[1]]) ) )
+  unit <- terra::linearUnits( terra::vect(compareList[[1]]) )
   if( (abs(unit - 0.3048) > 0.0001) & (abs(unit - 1) > 0.0001) )
     stop( "\nUnit for ", rdName, " should be either meters or feet\n" )
 
@@ -126,7 +144,7 @@ checkInputs <- function( rdName, rdField,
   s <- c( movedToName, movedFromName )
   for( j in s ) {
     if( file.exists(j) )
-      warning( "\n", j, " already exists and will be overwritten\n", immediate.=TRUE, call.=FALSE )
+      warning( "\n", j, " already exists, likely from a previous run, and will be overwritten\n", immediate.=TRUE, call.=FALSE )
     if( toupper(tools::file_ext(j)) != "SHP" & toupper(tools::file_ext(j)) != "GPKG" )
       warning( "\n", j, " is not a shapefile nor a geopackage\n", immediate.=TRUE, call.=FALSE )
   }
@@ -135,9 +153,9 @@ checkInputs <- function( rdName, rdField,
   if( toupper(tools::file_ext(roadRasterName)) != "TIF" )
     warning( "\n", roadRasterName, " does not have the required .tif extension" )
   if( file.exists(roadRasterName) )
-    warning( "\n", roadRasterName, " already exists and will be overwritten\n", immediate.=TRUE, call.=FALSE )
-  if( file.exists(outCSVName) )
-    warning( "\n", outCSVName, " already exists and will be overwritten\n", immediate.=TRUE, call.=FALSE )
+    warning( "\n", roadRasterName, " already exists, likely from a previous run, and will be overwritten\n", immediate.=TRUE, call.=FALSE )
+  if( file.exists(costCSVName) )
+    warning( "\n", costCSVName, " already exists, likely from a previous run, and will be overwritten\n", immediate.=TRUE, call.=FALSE )
 
   ## numeric parameters and value ranges
   if( !is.numeric(rasterResolution) | rasterResolution <= 0.0 ) {
@@ -154,6 +172,12 @@ checkInputs <- function( rdName, rdField,
     if( rasterResolution / unit > 50 )
       warning( paste0("\nSpecified raster resolution (", rasterResolution, unit.txt, ") likely too coarse\n") )
   }
+
+  ## cost type
+  if( !is.numeric(costType) )
+    warning( "\n costType should be numeric\n" )
+  if( costType != 1 & costType != 2 )
+    warning( "\n costType should either be 1, for travel calculations in time (hours), or 2, for travel calculations in distance (kilometers)\n" )
 
   ## value uniqueness for input vector data fields
   s       <- c( toName, fromName )
@@ -185,11 +209,11 @@ reportTime <- function( t1, t2 ) {
 
 #' @title Convert a numeric raster to integer type
 #' @param r spatRast object
-#' @param name filename (character) of the output integer raster
+#' @param name character, filename/path for the output integer raster
 #'
-#' @details The range of values in r should in 0-255. The datatype of the output
-#' is set to INT1U. Large rasters will be processed in tiles. TIF format is
-#' expected. If the file exists, it will be overwritten
+#' @details The range of values in \emph{r} should in 0-255. The data type of
+#' the output is set to INT1U. Large rasters will be processed in tiles. TIF
+#' format is expected. If the file exists, it will be overwritten
 #'
 #' @export
 setCellValueToInteger <- function( r, name ) {
@@ -224,41 +248,52 @@ setCellValueToInteger <- function( r, name ) {
 
 #' @title Rasterize a line vector file
 #'
-#' @param shpName filename (character) of a line vector
-#' @param shpField name (character) of column expected to be present in
-#' \emph{shpName}
+#' @param shpName character, filename/path of a line vector
 #' @param resolution numeric, the resolution of the raster to be created
-#' @param rasterName filename (character) of the raster to be created
+#' @param rasterName character, filename/path of the raster to be created
+#' @param shpField character, optional, name of column in \emph{shpName}
 #'
-#' @details \emph{shpName} is expected to a vector (line) representation of the
-#' road network. Cells of the output raster overlapping more than one line
-#' segments inherit the highest \emph{shpField} value. \emph{shpField} must
-#' contain the speed limit for every line segment expressed in miles per hour
-#' and in the (0, 199] range. \emph{resolution} coarser than 50m (164ft) will
-#' induce unwarranted over-generalization of the road network. Very fine
-#' \emph{resolution}, finer than 5m, can lead to a very large raster and routing
-#' graph and likely yield numerous disconnected segments. If \emph{rasterName}
-#' exists, it will be overwritten. TIFF format is expected. Datatype will be set
-#' to INT1U with NODATA cell values set to 255
+#' @details \emph{shpName} is expected to be a vector (line) layer representing
+#' the road network. If \emph{rasterName} is expected to be for calculations
+#' based on travel speed, \emph{shpField} must be specified, and provide speed
+#' values in the (0,200] range and in miles per hour for each road segment. A
+#' cell with more than one road segment present would inherit the highest
+#' \emph{shpField} value. If \emph{shpField} is missing, travel cost
+#' computations will be based on distance and all on-network cells will get a
+#' value of 1.
+#'
+#' \emph{resolution} coarser than 50m (164ft) will induce unwarranted
+#' over-generalization of the road network. Conversely, a very fine
+#' \emph{resolution}, finer than 5m, can create a very large raster and routing
+#' graph with numerous disconnected segments. These 'coarse' or 'fine'
+#' \emph{resolution} thresholds have been determined empirically
+#'
+#' If \emph{rasterName} exists, it will be overwritten. TIFF format is expected.
+#' Data type will be set to INT1U and NODATA cell values to 255
 #'
 #' @seealso [checkInputs]
 #'
 #' @examples
 #' \dontrun{
-#' rasterizeRoads("roads.gpkg", "MPH", 20, "road_net.tif")
+#' rasterizeRoads("roads.gpkg", 20, "road_net.tif", "MPH" )
 #' }
 #'
 #' @export
-rasterizeRoads <- function ( shpName, shpField, resolution, rasterName ) {
+rasterizeRoads <- function ( shpName, resolution, rasterName, shpField="" ) {
   startTime <- Sys.time()
 
   cat( "\nrasterizeRoads(): reading", shpName, "..." ); flush.console()
   shp <- terra::vect( shpName )
   shp.ext <- terra::ext( shp )
 
-  shpValRange <- as.numeric( range( shp[, shpField] ) )
-  if( shpValRange[1] <= 0.0 | shpValRange[2] > 199.0 ) {
-    stop( "\n\nrasterizeRoads(): ", shpField, " values in ", shpName, " should be in (0,199]\n\n" )
+  if( !missing(shpField) & nchar(shpField) > 0 ) {
+    if( !(shpField %in% names(shp)) ) {
+      stop( "\n\nrasterizeRoads(): ", shpField, " is not present in ", shpName, "\n" )
+    }
+    shpValRange <- as.numeric( range( shp[, shpField] ) )
+    if( shpValRange[1] <= 0.0 | shpValRange[2] > 200.0 ) {
+      stop( "\n\nrasterizeRoads(): ", shpField, " values in ", shpName, " should be in (0,199]\n\n" )
+    }
   }
 
   ## modify bounding box to ensure origin is at [0,0]. Include one cell wide border
@@ -282,24 +317,36 @@ rasterizeRoads <- function ( shpName, shpField, resolution, rasterName ) {
   cat( "\nrasterizeRoads(): performing rasterization ..." ); flush.console()
 
   # gdalUtilities::gdal_rasterize() executes faster than the terra::rasterize()
-  # gdal_rasterize() does not support a function that conditions the value of
-  # the cells. To ensure the maximum MAX_MPH value among vector segments
-  # present in a raster cell, the road segments in the input vector must be
-  # first sorted by their shpField in ascending order. That is accomplished via
-  # an sql query applied as argument to the function. If in another application
-  # the lower value is to be kept, then the sorting shold be in descending order
-  # ["ORDER BY", rdField, "DESC"]. If another metric is needed (e.g. mean), the
-  # terra::rasterize() must be used instead.
+  # gdal_rasterize(), however, does not support a function that conditions the
+  # cell values. If costType is 1, and to ensure the maximum shpField value
+  # among vector segments present in a raster cell is used for the raster, the
+  # road segments in the input vector must be first sorted by their shpField in
+  # ascending order. That is accomplished via an sql query applied as argument
+  # to the function. If in another application the lower value is to be kept,
+  # then the sorting should be in descending order ["ORDER BY", rdField,
+  # "DESC"]. If another metric is needed (e.g. mean), the terra::rasterize()
+  # must be used instead.
   # Note that using "TILED=YES" as a 'co' option in gdal_rasterize, will likely
   # create a raster smaller in bytes compared to one created without it.
   # Runtime does not seem to be affected much by the use of the 'co' option.
-  sql.txt <- paste("SELECT geom,", shpField, "FROM",  sf::st_layers(shpName)$name, "ORDER BY", shpField, "ASC")
-  gdalUtilities::gdal_rasterize(shpName, rasterName, a=shpField, sql=sql.txt,
-                                tr=c(resolution,resolution),
-                                te=c(shp.ext[1], shp.ext[3], shp.ext[2], shp.ext[4]),
-                                ot="Byte",
-                                co=c("COMPRESS=DEFLATE", "TILED=YES"),
-                                a_nodata = 255)
+  if( !missing(shpField) & nchar(shpField) > 0 ) { # cost based on travel speed
+    sql.txt <- paste("SELECT geom,", shpField, "FROM",  sf::st_layers(shpName)$name, "ORDER BY", shpField, "ASC")
+    gdalUtilities::gdal_rasterize(shpName, rasterName, a=shpField, sql=sql.txt,
+                                  tr=c(resolution,resolution),
+                                  te=c(shp.ext[1], shp.ext[3], shp.ext[2], shp.ext[4]),
+                                  ot="Byte",
+                                  co=c("COMPRESS=DEFLATE", "TILED=YES"),
+                                  a_nodata = 255)
+  } else { # cost based on travel distance
+    gdalUtilities::gdal_rasterize(shpName, rasterName,
+                                  burn=1,
+                                  tr=c(resolution,resolution),
+                                  te=c(shp.ext[1], shp.ext[3], shp.ext[2], shp.ext[4]),
+                                  ot="Byte",
+                                  co=c("COMPRESS=DEFLATE", "TILED=YES"),
+                                  a_nodata = 255)
+  }
+
   #r <- terra::rasterize( shp, r, field=shpField, fun=max, touches=FALSE, filename=rasterName, background=255, wopt=list(datatype="INT1U", NAflag=255), overwrite=T )
   cat( "\nrasterizeRoads(): Output saved as", rasterName ); flush.console()
   cat( paste( "\nrasterizeRoads(): Completed in", reportTime( startTime, Sys.time() ), "\n\n" ) )
@@ -320,7 +367,7 @@ rasterizeRoads <- function ( shpName, shpField, resolution, rasterName ) {
 #' the background value must change to NA, the value cells are encoded as
 #' integers
 #'
-#' @param rasterName filename (character) of the raster to be evaluated
+#' @param rasterName character, filename/path of the raster to be evaluated
 #'
 #' @export
 backgroundCellValue <- function( rasterName ) {
@@ -344,39 +391,43 @@ backgroundCellValue <- function( rasterName ) {
   cat( "\ncheckBackgroundCellValue(): Completed in", reportTime( startTime, Sys.time() ), "\n\n" )
 }
 
-#' @title Create cell connectivity data frame from raster
+#' @title Create a cell connectivity data frame from raster
 #'
 #' @description Uses a raster representing a road network to create a data frame
 #' featuring adjacent, and therefore connected, pairs of cells and calculates
 #' the transition cost for each pair
 #'
-#' @details The raster is expected to represent the road network speed limit, in
-#' miles per hour. Although integers, the cell IDs in the output are of
-#' numeric type, to prevent numerical overflow issues with rasters comprising
-#' more than 2^31-1 cells. The output of this function is subsequently used to
-#' create a graph on which all travel cost (time) computations are performed
+#' @param rasterName character, filename/path of a road network raster
+#' @param costType integer, 1 for travel calculations based on time, 2 for
+#' travel calculations based on distance
+#'
+#' @details If \emph{costType} = 1, value cells of the raster are expected to
+#' represent travel speed in miles per hour. Although integers, the cell IDs
+#' in the output data frame are of numeric type, to prevent numerical overflow
+#' issues with rasters comprising more than 2^31-1 cells. The output of this
+#' function is used by \emph{createGraph}()
 #'
 #' @returns data frame with three columns. The first two are the IDs of cell
-#' pairs, as inherited from the raster. The third column is the cost, in
-#' seconds, to travel between the cell centers
-#'
-#' @param rasterName filename (character) of a road network raster
+#' pairs, as inherited from the raster. The third column is the transition cost
+#' between the centers of paired cells, either as travel time in seconds, if
+#' \emph{costType} = 1, or the planar distance in meters, if \emph{costType} = 2
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-#' df <- prepareGraph( "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' df <- prepareGraph( "road_net.tif", 1 )
 #' head( df )
 #' }
 #'
-#' @importFrom foreach %dopar%
+#' @useDynLib tRee2MillCost, .registration = TRUE
+#' @importFrom foreach foreach %dopar%
+#' @importFrom Rcpp sourceCpp
+#' @importFrom snow makeCluster stopCluster
+#' @importFrom doSNOW registerDoSNOW
 #'
 #' @export
-#'
-#' @useDynLib tRee2MillCost, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
-prepareGraph <- function( rasterName ) {
+prepareGraph <- function( rasterName, costType ) {
   startTime <- Sys.time()
   cat( "\nprepareGraph(): processing ..." ); flush.console()
   r  <- terra::rast( rasterName )
@@ -411,7 +462,7 @@ prepareGraph <- function( rasterName ) {
   cl <- snow::makeCluster( min(nChunks, 4, parallel::detectCores()) )
   doSNOW::registerDoSNOW( cl )
 
-  chunk.result <- foreach::foreach( j=1:nrow(chunk.df), .export="rcpp_buildNodeDF" ) %dopar% {
+  chunk.result <- foreach::foreach( j=1:nrow(chunk.df), .packages=c("tRee2MillCost") ) %dopar% {
     r <- terra::rast( rasterName )
     chunk.ID.SW <- terra::cellFromRowCol( r, chunk.df$ROWEND[j], 1 )
     chunk.xy.SW <- terra::xyFromCell( r, chunk.ID.SW )
@@ -423,7 +474,7 @@ prepareGraph <- function( rasterName ) {
     terra::writeRaster( tmp.r, chunk.name, datatype="INT1U", overwrite=TRUE )
     mat <- tiff::readTIFF( chunk.name, as.is=T )
     unlink( chunk.name )
-    df <- rcpp_buildNodeDF( mat, resolution, unit )
+    df <- rcpp_buildNodeDF( mat, resolution, unit, costType )
     rm(mat, tmp.r)
     df$from <- df$from + chunk.df$CELLIDOFFSET[j]
     df$to <- df$to + chunk.df$CELLIDOFFSET[j]
@@ -447,9 +498,9 @@ prepareGraph <- function( rasterName ) {
 #' function. Will
 #' be removed in future updates
 #'
-#' @param rasterName filename (character) of the raster
+#' @param rasterName character, filename/path of the raster
 #' @param IDs numeric, vector of cell IDs
-#' @param tmpName filename (character) filename of the output raster
+#' @param tmpName character, filename/path of the output raster
 #'
 #' @export
 maskCells <- function( rasterName, IDs, tmpName ) {
@@ -465,12 +516,12 @@ maskCells <- function( rasterName, IDs, tmpName ) {
 #' network raster and a data frame of connected nodes to determine network
 #' segments that are disconnected from the rest of the network. The disconnected
 #' segments, if any, are saved into a file named dc_filexxxxx.gpkg. The
-#' geopackage can be examined to determine if editing of the vector
+#' GeoPackage can be examined to determine if editing of the vector
 #' representation of the road network is warranted. The functions is called
 #' internally by \emph{createGraph()}, it is not designed to be used
 #' independently
 #'
-#' @param rasterName filename (character) of the road network raster
+#' @param rasterName character, filename/path of the road network raster
 #' @param graph graph object created by \emph{createGraph()}
 #' @param node.df data frame created by \emph{prepareGraph()}
 #' @param nIterations integer, the number of randomly selected node IDs used to
@@ -480,8 +531,8 @@ maskCells <- function( rasterName, IDs, tmpName ) {
 #'
 #' @details nodeThreshold should be in (0,1) although a value lower than 0.5
 #' would denote a poor quality vector road network representation with a lot of
-#' disconnected segments. Default values for nIterations and nodeTrheshold
-#' set to 10 and 0.85 were determined empirically
+#' disconnected segments. Default values for nIterations and nodeTrheshold,
+#' set to 10 and 0.85, were determined empirically
 #'
 #' @seealso [prepareGraph] and [createGraph]
 #'
@@ -534,8 +585,8 @@ disconnectedSegments <- function( rasterName, graph, node.df, ... ) {
 #'
 #' @description Relies on a raster representation of a road network
 #' \emph{(rasterName)} and embedded functions to create a network graph. Network
-#' cells all 8 immediate neighbors representing background (no road) are labeled
-#' orphan, are saved into a file named orphan_xxxx.gpkg, and are removed from
+#' cells with all 8 immediate neighbors representing background (no road) are
+#' labeled orphan, saved into a file named orphan_xxxx.gpkg, and removed from
 #' \emph{rasterName}. Segments with more than one cell each that are
 #' disconnected from the rest of the network are saved into a file named
 #' dc_xxxx.pgkg and are also removed from \emph{rasterName}
@@ -544,27 +595,31 @@ disconnectedSegments <- function( rasterName, graph, node.df, ... ) {
 #' network segments) tends to increase as the resolution of the raster becomes
 #' finer.
 #'
-#' @param rasterName filename (character) of the road network raster
+#' @param rasterName character, filename/path of the road network raster
+#' @param costType integer, 1 for travel calculations based on time, 2 for
+#' travel calculations based on distance
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-#' graph <- createGraph( "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' graph <- createGraph( "road_net.tif", 1 )
 #' }
 #'
 #' @seealso [cppRouting::makegraph] and [prepareGraph]
 #'
 #' @export
-createGraph <- function( rasterName ) {
+createGraph <- function( rasterName, costType ) {
   startTime <- Sys.time()
-  graph.df    <- prepareGraph( rasterName )
+  graph.df    <- prepareGraph( rasterName, costType )
   cat( "\ncreateGraph(): arranging nodes ..." ); flush.console()
   nodeIDs     <- sort( unique( c( graph.df$from, graph.df$to ) ) )
   nIDs        <- length( nodeIDs )
   node.df     <- data.frame( cbind( nodeIDs, terra::xyFromCell(terra::rast(rasterName), nodeIDs) ) )
   cat( "\ncreateGraph(): assembling nodes onto a graph ..." ); flush.console()
   graph       <- cppRouting::makegraph( graph.df, directed = FALSE, coords = node.df )
+  graph$attrib["costType"] <- list( NULL )
+  graph$attrib["costType"][[1]] <- costType
   cellIDs     <- terra::cells( terra::rast(rasterName) )
   if( nrow(graph$coords) < length(cellIDs) ) {
     cat( "\ncreateGraph(): checking for orphan graph nodes ..." ); flush.console()
@@ -586,11 +641,11 @@ createGraph <- function( rasterName ) {
 
 #' @title Move points in a vector file to road network cells
 #'
-#' @param rasterName filename (character) of the network raster
-#' @param inName filename (character) of the point vector
-#' @param outName filename (character) of the moved point vector
+#' @param rasterName character, filename/path of the road network raster
+#' @param inName character, filename/path of the point vector layer
+#' @param outName character, filename/path of the moved point vector layer
 #'
-#' @description Travel cost computations are performed between locations (nodes)
+#' @description Travel cost calculations are performed between locations (nodes)
 #' of a graph representing the road network. Points that are not on the network
 #' must first move from their original location. The new location is determined
 #' as the one on the network closest (in 2D) to the original location.
@@ -606,10 +661,10 @@ createGraph <- function( rasterName ) {
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' fromPath <- system.file( "data", "sample.gpkg", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-#' graph <- createGraph( "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' fromPath <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' graph <- createGraph( "road_net.tif", 1 )
 #' movePt2RdSegment( "road_net.tif", fromPath, "movedFromLocations.gpkg" )
 #' p <- terra::vect( "movedFromLocations.gpkg" )
 #' head( data.frame(p) )
@@ -707,17 +762,17 @@ movePt2RdSegment <- function( rasterName, inName, outName ) {
 
 #' @title Determine if points are on value cells of a raster
 #'
-#' @param rasterName filename (character) of the network raster
-#' @param pName filename (character) of a point vector
+#' @param rasterName character, filename/path of the network raster
+#' @param pName character, filename/path of a point vector layer
 #'
 #' @return A console message with connectivity results
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' fromPath <- system.file( "data", "sample.gpkg", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-#' graph <- createGraph( "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' fromPath <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' graph <- createGraph( "road_net.tif", 1 )
 #' movePt2RdSegment( "road_net.tif", fromPath, "movedFromLocations.gpkg" )
 #' pOriginal <- terra::vect( fromPath )
 #' pMoved <- terra::vect( "movedFromLocations.gpkg" )
@@ -733,39 +788,40 @@ connectivity <- function( rasterName, pName ) {
   w   <- is.na( v[, names(r)[1]] )
   nNA <- length( v[w, names(r)[1]] )
   if( nNA > 0 ) {
-    stop( "\n", nNA, " element(s) of ", pName, " is(are) on NA ", rasterName, " cells\n\n" )
+    warning( "\n", nNA, " out of ", length(p), " element(s) of ",
+             basename(pName), " are on NA ", rasterName, " cells\n\n" )
   } else {
-    cat( "\nAll elements of", pName, "are on value", rasterName, "cells\n" )
+    cat( "\nAll elements of", basename(pName), "are on value", rasterName, "cells\n" )
   }
 }
 
-#' @title Compute the network travel cost matrix
+#' @title Compute the network cost matrix
 #'
 #' @param graph graph object generated by \emph{createGraph()}
-#' @param rasterName filename (character) of the raster representation of the
-#' road network
-#' @param fromName filename (character) of a point vector file with travel start
-#' locations
+#' @param rasterName character, filename/path of the raster network
+#' @param fromName character, filename/path of a point vector layer with travel
+#' start locations
 #' @param fromField character, name of column in \emph{fromName} used as point
 #' identifier
-#' @param toName filename (character) of a point vector file with travel end
-#' locations
+#' @param toName character, filename/path of a point vector layer with travel
+#' end locations
 #' @param toField character, name of column in \emph{toName} used as point
 #' identifier
 #'
-#' @description Calculates the travel cost, expressed in hours, between points
-#' in \emph{fromName} and \emph{toName} respectively
+#' @description Calculates the travel cost, either in hours or kilometers,
+#' between points in \emph{fromName} and \emph{toName} respectively.
 #'
 #' @details \emph{fromName} and \emph{toName} locations should be on, or have
-#' been moved to the network by applying \emph{movePt2RdSegement()}
+#' been moved to the network by applying \emph{movePt2RdSegement()}. The
+#' \emph{costType} applied is read from the \emph{graph} object
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' fromPath <- system.file( "data", "sample.gpkg", package="tRee2MillCost" )
-#' toPath <- system.file( "data", "mills.gpkg", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-#' graph <- createGraph( "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' fromPath <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+#' toPath <- system.file( "extdata", "mills.gpkg", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' graph <- createGraph( "road_net.tif", 1 )
 #' movePt2RdSegment( "road_net.tif", fromPath, "movedFromLocations.gpkg" )
 #' names( terra::vect( "movedFromLocations.gpkg" ) )
 #' movePt2RdSegment( "road_net.tif", toPath, "movedToLocations.gpkg" )
@@ -776,14 +832,13 @@ connectivity <- function( rasterName, pName ) {
 #' write.csv( cost.df, "cost_matrix.csv", row.names=FALSE )
 #' }
 #'
-#' @return data frame. The first column named \emph{fromField} contains the IDs
+#' @return data frame. The first column named \emph{toField} contains the IDs
 #' of the destination points. Each of the remaining columns is named by the
-#' values in \emph{fromField} and reports the pairwise travel cost in hours
-#' across \emph{fromName} and \emph{toName} points. An NA value corresponding to
-#' \emph{fromName} to \emph{toName} pair indicates that there is no path along
-#' the road network that connects them and suggests that one or both points in
-#' the pair have not moved to the interconnected road network by using
-#' movePt2RdSegment()
+#' values in \emph{fromField} and reports the pairwise cost either as travel
+#' time in hours or travel distance in kilometers across \emph{fromName} and
+#' \emph{toName} points. An NA value indicates no path exists between the
+#' corresponding \emph{fromName} and \emph{toName} locations and suggests that
+#' one or both points in the pair have not moved using \emph{movePt2RdSegment()}
 #'
 #' @export
 calculateCost <- function( graph, rasterName, fromName, fromField, toName, toField ) {
@@ -794,11 +849,17 @@ calculateCost <- function( graph, rasterName, fromName, fromField, toName, toFie
   toCellIDs     <- terra::cellFromXY( terra::rast(rasterName), terra::crds(terra::vect(toName)) )
   toIDs         <- data.frame( terra::vect(toName) )[,toField ]
   cat( "\ncalculateCost(): optimizing graph ..." ); flush.console()
+  costType      <- graph$attrib["costType"][[1]]
+  #graph$attrib$costType will be removed from cppRouting::cpp_simplify()
   graph         <- cppRouting::cpp_simplify( graph, keep=c(fromCellIDs, toCellIDs) )
   cat( "\ncalculateCost(): calculating cost matrix ..." ); flush.console()
   RcppParallel::setThreadOptions( parallel::detectCores() )
   mat           <- cppRouting::get_distance_matrix( graph, from=fromCellIDs, to=toCellIDs )
-  mat           <- t( round( mat/3600, 3 ) ) ## convert secs to hours and transpose
+  if( costType == 1 ) {
+    mat <- t( round( mat/3600, 3 ) ) ## convert secs to hours and transpose
+  } else {
+    mat <- t( round( mat/1000, 3 ) ) ## convert meters to kilometers and transpose
+  }
   df            <- data.frame( mat )
   df            <- cbind( as.character(toIDs), df )
   names( df )   <- c( toField, as.character(fromIDs) )
@@ -807,23 +868,27 @@ calculateCost <- function( graph, rasterName, fromName, fromField, toName, toFie
 }
 
 #' @title Get the road network part accessible from a node within specified time
+#' or distance
 #'
-#' @description Determines the road network components that are within a user-
-#' specified travel time (in hours) from a road raster cell ID, saves it in .tif
-#' format, and, optionally, adds it to a bitmap figure in PNG format
+#' @description Determines the road network components that are within user-
+#' specified travel time (in hours) or distance (in kilometers) from a road
+#' raster cell ID, saves it in .tif format, and, optionally, adds it to a bitmap
+#' figure in PNG format
 #'
 #' @param graph graph object generated by \emph{createGraph()}
 #' @param cellID numeric, road network raster cell where travel starts
-#' @param maxTinHours numeric, maximum travel time from the start node, in hours
+#' @param threshold numeric, maximum travel time, in hours, or travel distance,
+#' in kilometers, from the start node
 #' @param label character, used in the figure title and the output PNG filename
-#' @param PNG logical. If TRUE a figure of the isochrone is created in PNG format
+#' @param PNG logical. If TRUE, a figure of the isochrone is created in PNG
+#' format
 #' @param colRamp character, either "RGB" or "508". The latter ensures colors
 #' used in the figure are in compliance with Section 508 of the Rehabilitation
 #' Act
 #' @param trimPNG logical. If TRUE, extra white space is trimmed from the PNG
 #' and a 10 pixel border is added
 #'
-#' @details cellID refers to a cell in the road network raster used to greate
+#' @details cellID refers to a cell in the road network raster used to create
 #' the graph. The cellID can be determined from coordinates or raster row and
 #' column using \emph{terra::cellFromRowCol()} or \emph{terra::cellFromXY()}. It
 #' can also be determined from the graph, if the corresponding graph node ID is
@@ -835,8 +900,12 @@ calculateCost <- function( graph, rasterName, fromName, fromField, toName, toFie
 #' nodes are not in the graph'.
 #'
 #' The resolution of the isochrone raster created is calculated from the graph
-#' object and matches the resolution of the road raster used to created the
-#' graph
+#' object and matches the resolution of the road raster used to create the graph
+#'
+#' The term [isochrone]{.underline} has been inherited from
+#' \emph{cppRounting::isochrone()} and does imply \emph{threshold} is
+#' referencing travel time. The type of cost calculation is determined by the
+#' \emph{costType} used in \emph{createGraph()}
 #'
 #' If a PNG figure is requested, the pixel dimensionality of the plot region
 #' (without the axes, legend, and title) will match the rows and columns in the
@@ -847,30 +916,30 @@ calculateCost <- function( graph, rasterName, fromName, fromField, toName, toFie
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' toPath <- system.file( "data", "mills.gpkg", package="tRee2MillCost" )
-#' graphPath <- system.file( "data", "graph_20m.rds", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' toPath <- system.file( "extdata", "mills.gpkg", package="tRee2MillCost" )
+#' # with rdField specified in rasterizeRoads(), the graph should be based on
+#' #travel time
+#' graphPath <- system.file( "extdata", "graph_20m_time.rds", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
 #' graph <- readRDS( graphPath )
 #' movePt2RdSegment( "road_net.tif", toPath, "movedToLocations.gpkg" )
 #' mills.v <- terra::vect( "movedToLocations.gpkg" )
+#' # pick as destination the third mill in toPath
 #' mill.xy <- terra::crds( mills.v[3] )
 #' mill.cellID <- terra::cellFromXY( terra::rast( "road_net.tif" ), mill.xy )
 #' getIsochrone( graph, mill.cellID, 0.5, mills.v$COMPANY_NAME[3], TRUE, "RGB", TRUE )
 #' }
 #'
-#' @seealso [cellFromRowCol], [graphNodeFromXY], and [cellFromGraphNode]
+#' @seealso [cellFromRowCol], [graphNodeFromXY], [cellFromGraphNode], and
+#' [cppRouting::get_isochrone]
 #'
-#' @return spatrast object saved as 'isochrone_<maxTinHours>h_<label>.tif'. If
-#' PNG=TRUE, also a PNG figure named 'isochrone_<maxTinHours>h_<label>.png'
+#' @return spatrast object saved as 'isochrone_<threshold><h|km>_<label>.tif'.
+#' If PNG=TRUE, also a PNG figure named
+#' 'isochrone_<threshold><h|km>_<label>.png'
 #'
 #' @export
-getIsochrone <- function( graph, cellID, maxTinHours, label, PNG=FALSE, colRamp, trimPNG=TRUE ) {
-  if( is.null(cellID) | missing(cellID) )
-    stop( "\ngetIsochrone(): cellID is missing\n\n" )
-  if( !is.numeric(cellID) )
-    stop( "\ngetIsochrone(): cellID should be numeric\n\n" )
-
+getIsochrone <- function( graph, cellID, threshold, label, PNG=FALSE, colRamp, trimPNG=TRUE ) {
   if( !(PNG %in% c(TRUE, FALSE)) ) stop( "\ngetIsochrone(): PNG should be TRUE or FALSE\n\n" )
   if( !is.logical(PNG) )
     stop( "\ngetIsochrone(): PNG should be TRUE or FALSE\n\n" )
@@ -882,8 +951,10 @@ getIsochrone <- function( graph, cellID, maxTinHours, label, PNG=FALSE, colRamp,
       stop( "\ngetIsochrone(): trimPNG should be TRUE or FALSE\n\n" )
   }
 
-  maxTinSeconds <- maxTinHours * 3600
-  breaks <- seq( 0, maxTinSeconds, length.out=2048 )
+  costType <- graph$attrib$costType
+
+  # in ifelse(), convert threshold from hours to seconds or meters to kilometers
+  breaks <- seq( 0, ifelse( costType == 1, threshold * 3600, threshold * 1000 ), length.out=2048 )
   RcppParallel::setThreadOptions( parallel::detectCores() )
   iso <- cppRouting::get_isochrone( graph, from=cellID, lim=breaks, setdif=T, long=T )
   names(iso)[2] <- "nodeIDs"
@@ -903,9 +974,9 @@ getIsochrone <- function( graph, cellID, maxTinHours, label, PNG=FALSE, colRamp,
   ext <- terra::ext( c( floor(rangeX[1]/res)*res, ceiling(rangeX[2]/res)*res,
                         floor(rangeY[1]/res)*res, ceiling(rangeY[2]/res)*res ) )
   r <- terra::rast( ext, res=res )
-  r <- terra::rasterize( as.matrix(iso[, c("x", "y")]), r, values=iso$lim, fun="mean" ) / 3600
-
-  terra::writeRaster(r, paste0("isochrone_", maxTinHours, "h_", label, ".tif"), overwrite=TRUE )
+  r <- terra::rasterize( as.matrix(iso[, c("x", "y")]), r, values=iso$lim, fun="mean" ) / ifelse( costType == 1, 3600, 1000 )
+  unitTxt <- ifelse( graph$attrib$costType == 1, "h", "km" )
+  terra::writeRaster(r, paste0("isochrone_", threshold, unitTxt, "_", label, ".tif"), overwrite=TRUE )
 
   if( PNG ) {
     options(scipen=999)
@@ -925,16 +996,16 @@ getIsochrone <- function( graph, cellID, maxTinHours, label, PNG=FALSE, colRamp,
     pointSize    <- 0.01 * maxDim + 10
     pngHeight <- ht + bottomMargin + topMargin
     pngWidth  <- wd + leftMargin + rightMargin
-    pngName   <- paste0( "isochrone_", maxTinHours, "h_", gsub(" ", "_", label), ".png" )
+    pngName   <- paste0( "isochrone_", threshold, unitTxt, "_", gsub(" ", "_", label), ".png" )
 
     png( pngName,
          height=pngHeight, width=pngWidth, pointsize=pointSize, units="px", res=72 )
     par( mai=c(bottomMargin, leftMargin, topMargin, rightMargin) / 72 )
     terra::plot( r,
                  mar=NA,
-                 main=paste0( "Isochrone ", maxTinHours, "h ", label ),
+                 main=paste0( "Isochrone ", threshold, unitTxt, " ", label ),
                  cex.main = sqrt( pointSize / 12 ),
-                 plg=list( title="Hours" ),
+                 plg=list( title=ifelse(costType == 1, "Hours", "km") ),
                  col=pal( 256 ), background="#202020", maxcell=Inf, smooth=FALSE, box=FALSE, buffer=FALSE )
     terra::points( graph$coords[graph$coords$nodeIDs == as.character(cellID), c("x", "y")], pch=20, col="white", cex=1.5 )
     dev.off()
@@ -956,16 +1027,18 @@ getIsochrone <- function( graph, cellID, maxTinHours, label, PNG=FALSE, colRamp,
 #' raster used to create the graph
 #'
 #' @param graph object generated by \emph{createGraph()}
-#' @param rasterName filename (character) of the raster representation of the
-#' road network used to create the graph
+#' @param rasterName character, filename/path of the raster network used to
+#' create the graph
 #' @param X Numeric, X coordinate
 #' @param Y Numeric, Y coordinate
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' graphPath <- system.file( "data", "graph_20m.rds", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' graphPath <- system.file( "extdata", "graph_20m_time.rds", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' # Since rasterizeRoads() has the rdField populated the graph loaded should be
+#' # based on travel time
 #' graph <- readRDS( graphPath )
 #' x <- 496350
 #' y <- 4903210
@@ -1005,9 +1078,11 @@ graphNodeFromXY <- function( graph, rasterName, X, Y ) {
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' graphPath <- system.file( "data", "graph_20m.rds", package="tRee2MillCost" )
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' graphPath <- system.file( "extdata", "graph_20m_time.rds", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' #' # Since rasterizeRoads() has the rdField populated the graph loaded should be
+#' # based on travel time
 #' graph <- readRDS( graphPath )
 #' node <- 18692
 #' cellID <- cellFromGraphNode( graph, node )
@@ -1030,43 +1105,55 @@ cellFromGraphNode <- function ( graph, node ) {
 
 #' @title Summarize travel cost
 #'
-#' @description Processes cost matrix to generate a summary
+#' @description Processes a cost matrix to generate a summary
 #'
-#' @param costName filename (character) of the CSV generated by
-#' \emph{calculateCost()}
+#' @param costDF data frame created by \emph{calculateCost}
+#' @param fromName character, filename/path of the point vector layer
+#' representing travel start location(s)
 #' @param fromField character, the field in \emph{fromName} used with
 #' \emph{calculateCost()} and representing travel start locations
-#' @param maxMoveDistance NULL (default) or a positive numeric value for the
-#' maximum 2D distance a \emph{fromName} location is allowed to move to be on
-#' the road network and still considered in the summary
-#' @param maxTime NULL (default) or a positive numeric value for maximum travel
-#' time, in hours, to destination location(s) considered in the summary
-#' @param fromName NULL or filename (character) of the point vector representing
-#' travel start location(s)
+#' @param maxMoveDistance optional numeric, the maximum 2D distance a
+#' \emph{fromName} location is allowed to move to be on the road network and
+#' still considered in the summary
+#' @param travelThreshold optional numeric, maximum travel time, in hours, or
+#' travel distance, in kilometers, to destination location(s) considered in the
+#' summary
 #'
-#' @details If \emph{maxMoveDistance} is not NULL, \emph{fromName} must be
-#' specified. \emph{maxMoveDistance} should be in the unit of the projection of
-#' the spatial data used to calculate the cost matrix. If both
-#' \emph{maxMoveDistance} and \emph{maxTime} are set to NULL, all 'from'
-#' locations in \emph{fromName} will be used to create the summary.
+#' @details \emph{maxMoveDistance} should be in the linear unit of the
+#' projection of the spatial data used to calculate the cost matrix. If both
+#' \emph{maxMoveDistance} and \emph{travelThreshold} are missing or set to "",
+#' all locations in \emph{fromName} will be used to create the summary.
 #' \emph{maxMoveDistance} is often referred to as 'yarding' distance. Smaller
-#' values for \emph{maxMoveDistance} and \emph{maxTime} result in fewer
+#' values for \emph{maxMoveDistance} and \emph{travelThreshold} result in fewer
 #' 'from' and 'to' locations included in the summary
 #'
 #' \emph{fromName} must represent locations moved to the rasterized road network
 #' by \emph{movePt2RdSegment()}
 #'
-#' @return list with two elements; a dataframe comprising 'from' locations IDs,
-#' the closest, travel time-wise to 'to' location IDs, and the corresponding
-#' travel time, in hours. The second element, also a data frame, with 'to'
-#' location IDs, the number of 'from' locations for which the 'to' location is
-#' closest, and the mean and standard deviation for the travel cost (time) for
-#' those 'from' locations
+#' @return list with two elements; a data frame comprising 'from' locations IDs,
+#' the closest, travel time or distance to 'to' location IDs, and the
+#' corresponding travel time, in hours, or distance, in kilometers. The second
+#' list element, also a data frame, with 'to' location IDs, the number of 'from'
+#' locations for which the 'to' location is closest in travel time or distance,
+#' and the mean and standard deviation for the travel cost (time) for those
+#' 'from' locations
 #'
 #' @examples
 #' \dontrun{
-#' costDataPath <- system.file( "data", "cost_matrix.csv", package="tRee2MillCost" )
-#' summary.list <- costSummary( costDataPath, fromField="plotID", maxTime=0.5)
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' fromPath <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+#' toPath <- system.file( "extdata", "mills.gpkg", package="tRee2MillCost" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' graph <- createGraph( "road_net.tif", 1 )
+#' movePt2RdSegment( "road_net.tif", fromPath, "movedFromLocations.gpkg" )
+#' movePt2RdSegment( "road_net.tif", toPath, "movedToLocations.gpkg" )
+#' cost.df <- calculateCost( graph, "road_net.tif",
+#'                           "movedFromLocations.gpkg", "sampleID",
+#'                           "movedToLocations.gpkg", "COMPANY_NAME" )
+#' summary.list <- costSummary( cost.df,
+#'                              fromName="movedFromLocations.gpkg",
+#'                              fromField="sampleID",
+#'                              travelThreshold=0.5 ) #30 minutes
 #' print( summary.list[[1]] )
 #' print( summary.list[[2]] )
 #' }
@@ -1074,102 +1161,67 @@ cellFromGraphNode <- function ( graph, node ) {
 #' @seealso [calculateCost] and [movePt2RdSegment]
 #'
 #' @export
-costSummary <- function( costName, fromField, maxMoveDistance=NULL, maxTime=NULL, fromName=NULL ) {
-  df <- read.csv(costName, header=T, check.names=FALSE)
-  toField <- names(df)[1]
+costSummary <- function( costDF, fromName, fromField, maxMoveDistance="", travelThreshold="" ) {
+  #df <- read.csv(costName, header=T, check.names=FALSE)
+  toField <- names(costDF)[1]
 
-  if( !is.null(maxMoveDistance) ) {
-    if( is.null(fromName) )
-      stop( "\ncostSummary(): fromName required when maxMoveDistance is specified\n\n" )
-    if( !file.exists(fromName) )
-      stop( "\ncostSummary(): ", fromName, " does not exist\n\n" )
+  if( !file.exists(fromName) )
+    stop( "\ncostSummary:", fromName, " does not exist\n\n" )
+
+  s <- terra::vect( fromName ) # must contain fromField and MOVEDIST
+  unit <- terra::linearUnits( s )
+  if( unit == 1 ) {
+    unit.txt <- "m"
+  } else {
+    unit.txt <- "ft"
+  }
+
+  if( fromField %in% names(s) == FALSE )
+    stop( "\ncostSummary(): Field ", fromField, " is not present in ", fromName, "\n\n" )
+  if( "MOVEDIST" %in% names(s) == FALSE )
+    stop( "\ncostSummary(): MOVEDIST field required but missing from ", fromName, "\n\n" )
+
+  if( !missing(maxMoveDistance) & maxMoveDistance != "" ) {
     if( !is.numeric(maxMoveDistance) )
       stop( "\ncostSummary(): maxMoveDistance must be numeric. ", maxMoveDistance, "was specified\n\n" )
     if( maxMoveDistance <= 0 )
       stop( "\ncostSummary(): maxMoveDistance must be positive. ", maxMoveDistance, " was specified\n\n" )
-
-    s <- terra::vect( fromName ) # must contain fromField and MOVEDIST
-    unit <- terra::linearUnits( s )
-    if( unit == 1 ) {
-      unit.txt <- "m"
-    } else {
-      unit.txt <- "ft"
-    }
-    if( fromField %in% names(s) == FALSE )
-      stop( "\ncostSummary(): ", fromField, " referenced in ", costName, " is not present in ", fromName, "\n\n" )
-    if( "MOVEDIST" %in% names(s) == FALSE )
-      stop( "\ncostSummary(): MOVEDIST field required but missing from ", fromName, "\n\n" )
     from.df <- data.frame(s)
     fromID <- from.df[from.df$MOVEDIST > maxMoveDistance, fromField]
     fromRemoved <- length( fromID )
-    if( fromRemoved == (ncol(df) - 1) ) {
-      cat( "\ncostSummary(): All records in", costName, "have MOVEDIST greater than", maxMoveDistance, "\n\n" )
+    if( fromRemoved == (ncol(costDF) - 1) ) {
+      cat( "\ncostSummary(): All records in", fromName, "have MOVEDIST greater than", maxMoveDistance, "\n\n" )
       return( invisible(NULL) )
     }
     if( fromRemoved > 0 )
       cat("\n", fromRemoved, "'from' locations had move distance greater than", maxMoveDistance, unit.txt, "and were excluded\n\n")
-    df[, fromID] <- NULL
+    costDF[, fromID] <- NULL
   }
 
-  w <- df[, 2:ncol(df)] > maxTime
-  df[, 2:ncol(df)][w] <- NA
+  if( !missing(travelThreshold) | travelThreshold != "") {
+    w <- costDF[, 2:ncol(costDF)] > travelThreshold
+    costDF[, 2:ncol(costDF)][w] <- NA
+  }
 
-  # if( !is.null(maxTime) ) {
-  #   if( !is.numeric(maxTime) )
-  #     stop( "\ncostSummary(): maxTime must be numeric. ", maxTime, "was specified\n\n" )
-  #   if( maxTime <= 0 )
-  #     stop( "\ncostSummary(): maxMoveDistance must be positive. ", maxTime, " was specified\n\n" )
-  #   for( col in 2:ncol(df) )  {
-  #     df[df[[col]] > maxTime, col] <- NA
-  #   }
-  #
-  #   if( ncol(df) == 2 ) {
-  #     if( all(is.na(df[,2])) ) {
-  #       cat( "\nNo 'from' locations with maxTime <", maxTime, "\n")
-  #       return( invisible(NULL) )
-  #     } else {
-  #       df = df[!is.na(df[,2]),]
-  #       return( list(df, NULL) )
-  #     }
-  #   } else {
-  #     NAcols <- apply(df[,2:ncol(df)], 2, function(x) all(is.na(x)) )
-  #     allNAcols <- sum( NAcols )
-  #     df[, 2:col(df)][NAcols] <- NULL
-  #   }
-  #
-  #   if( ncol(df) == 2 ) {
-  #
-  #   NArows <- apply(df[,2:ncol(df)], 1, function(x) !all(is.na(x)) )
-  #   allNArows <- sum( NArows )
-  #   if( allNArows < nrow(df) )
-  #     cat("\n", nrow(df) - allNArows, "'to' locations in", costName, "had all 'from' locations with maxTime >", maxTime, "and were excluded\n" )
-  #   if( allNArows == 0 ) {
-  #     cat("/nAll remaining records in", costName, "were removed\n\n" )
-  #     return( invisible(NULL) )
-  #   }
-  #   df <- df[NArows,]
-  #
-  # }
+  if( ncol(costDF) == 2 )
+    return( list( costDF, NULL ) )
 
-  if( ncol(df) == 2 )
-    return( list( df, NULL ) )
-
-  minCostTo <- df[,1][apply(df[,2:ncol(df)], 2, function(x) { if(all(is.na(x))) NA else which.min(x) } )]
-  minCost <- apply(df[,2:ncol(df)], 2, function(x) { if(all(is.na(x))) NA else min(x, na.rm=T) } )
-  minCost.df <- data.frame( names(df)[2:ncol(df)], minCostTo, minCost )
+  minCostTo <- costDF[,1][apply(costDF[,2:ncol(costDF)], 2, function(x) { if(all(is.na(x))) NA else which.min(x) } )]
+  minCost <- apply(costDF[,2:ncol(costDF)], 2, function(x) { if(all(is.na(x))) NA else min(x, na.rm=T) } )
+  minCost.df <- data.frame( names(costDF)[2:ncol(costDF)], minCostTo, minCost )
   names( minCost.df ) <- c( fromField, toField, "MINCOST" )
   minCost.df <- minCost.df[complete.cases(minCost.df),]
   row.names( minCost.df ) <- NULL
   if( nrow( minCost.df ) == 0 ) {
-    cat( "\nNo 'from'/'to' pairs in", costName, "for MaxTime <= ", maxTime, "hours\n" )
+    cat( "\nNo 'from'/'to' pairs much the summary criteria specified\n" )
     return( invisible(NULL) )
   }
 
-  nFromPerTo <- tapply(minCost.df[, fromField], minCost.df[, names(df)[1]], length )
+  nFromPerTo <- tapply(minCost.df[, fromField], minCost.df[, names(costDF)[1]], length )
   meanCostPerTo <- round( tapply(minCost.df$MINCOST, minCost.df[, toField], mean, na.rm=T ), 3 )
   medianCostPerTo <- round( tapply(minCost.df$MINCOST, minCost.df[, toField], median, na.rm=T ), 3 )
   sdCostPerTo <- round( tapply(minCost.df$MINCOST, minCost.df[, toField], sd, na.rm=T ), 3 )
-  costSummary.df = data.frame( names(nFromPerTo), nFromPerTo, meanCostPerTo, medianCostPerTo, sdCostPerTo )
+  costSummary.df <- data.frame( names(nFromPerTo), nFromPerTo, meanCostPerTo, medianCostPerTo, sdCostPerTo )
   row.names( costSummary.df ) <- NULL
   names( costSummary.df ) = c( toField, "FROMCOUNT", "COSTMEAN", "COSTMEDIAN", "COSTSD" )
 
@@ -1182,39 +1234,40 @@ costSummary <- function( costName, fromField, maxMoveDistance=NULL, maxTime=NULL
 #' delineate the routes between two sets of locations present in the graph
 #'
 #' @param graph object generated by \emph{createGraph()}
-#' @param roadRasterName filename (character) of the road raster
-#' @param fromName filename (character) of a point vector file
+#' @param roadRasterName character, filename/path of the road raster
+#' @param fromName character, filename/path of a point vector layer
 #' @param fromField character, the name of a field with point IDs present in
 #' \emph{fromName}
 #' @param fromIDs character, vector of selected point IDs, present in
 #' \emph{fromField}, representing path origins
-#' @param toName filename (character) of a point vector file
+#' @param toName character, filename/path of a point vector layer
 #' @param toField character, the name of a field with point IDs present in
 #' \emph{toName}
 #' @param toIDs character, vector of selected point IDs, present in
 #' \emph{toField}, representing path destinations
 #'
-#' @details Originally designed to identify the routes from a collection of
-#' points to a single destination point, as from sample locations (forest
-#' inventory plots) to a wood processing facility. It can also be used with a
-#' set of destination points. The routes identified carry no attributes
+#' @details Originally designed to identify routes from a collection of points
+#' to a single destination point, as from sample locations (forest inventory
+#' plots) to a wood processing facility. It can also be used with a set of
+#' destination points. The routes identified carry no attributes
 #'
 #' \emph{fromIDs} and \emph{toIDs} for locations of interest can be determined
-#' by querying the road raster or the graph. All IDs must be present on the
-#' graph. Using a contracted or simplified graph requires that all IDs have been
-#' kept in \emph{cppRouting::cpp_simplify()} and even then the paths delineated
-#' will likely deviate from the original vector road representation used to
-#' great the graph. To maintain path detail, a non-optimized version of the
-#' graph should be used at the cost of longer processing time
+#' by querying the road raster or the graph. All IDs must be present in the
+#' graph. If \emph{cppRouting::cpp_simplify()} has been applied to the
+#' \emph{graph} object, all \emph{fromIDs} and \emph{toIDs} must have been kept.
+#' If not kept, the paths delineated will deviate from the original vector road
+#' layer used to great the graph. To maintain path detail, a non-optimized
+#' version of the \emph{graph} should be used at the cost of longer processing
+#' time
 #'
 #' @examples
 #' \dontrun{
-#' rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-#' graphPath <- system.file( "data", "graph_20m.rds", package="tRee2MillCost" )
-#' toPath <- system.file( "data", "mills.gpkg", package="tRee2MillCost" )
-#' fromPath <- system.file( "data", "sample.gpkg", package="tRee2MillCost" )
+#' rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+#' graphPath <- system.file( "extdata", "graph_20m_time.rds", package="tRee2MillCost" )
+#' toPath <- system.file( "extdata", "mills.gpkg", package="tRee2MillCost" )
+#' fromPath <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
 #'
-#' rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
+#' rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
 #' graph <- readRDS( graphPath )
 #' movePt2RdSegment( "road_net.tif", toPath, "movedToLocations.gpkg" )
 #' movePt2RdSegment( "road_net.tif", fromPath, "movedFromLocations.gpkg" )

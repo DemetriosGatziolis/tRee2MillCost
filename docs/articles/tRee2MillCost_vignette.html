@@ -71,7 +71,7 @@
                         <h4 data-toc-skip class="author">Demetrios
 Gatziolis</h4>
             
-            <h4 data-toc-skip class="date">2026-09-09</h4>
+            <h4 data-toc-skip class="date">2026-09-10</h4>
       
       <small class="dont-index">Source: <a href="NA/NA/NA/blob/HEAD/vignettes/tRee2MillCost_vignette.Rmd"><code>vignettes/tRee2MillCost_vignette.Rmd</code></a></small>
       <div class="hidden name"><code>tRee2MillCost_vignette.Rmd</code></div>
@@ -101,19 +101,19 @@ route calculations. Developing a topologically clean vector network is
 labor-intensive and often impractical. This package addresses the
 limitation by converting a composite assembled from multiple vector
 networks to a raster representation.</p>
-<p>Cost estimates based on travel distance require no road attributes,
-the linear representation suffices. For cost estimates based on travel
-time all segments in the composite vector network ingested to produce
-the raster representation must have an attribute representing the
-modeled travel speed along that segment—for example, the expected speed
-of log trucks. Legal speed limits are one way to represent travel speed,
-but rarely included in publicly available vector road layers. Users
-therefore must estimate travel speeds from auxiliary information, and
-appropriate values for a given road class may vary geographically. The
-vector road layer must be attributed with travel speed values before
-running package functions. Raster cells containing more than one road
-segment, or part of a segment, inherit the highest travel speed value
-among them.</p>
+<p>A composite vector network ingested to produce the raster
+representation does not require road attributes to produce cost
+estimates based on travel distance. For cost estimates based on travel
+time, all segments in the composite vector network must have an
+attribute representing the modeled travel speed along that segment—for
+example, the expected speed of log trucks. Legal speed limits are one
+way to represent travel speed, but rarely included in publicly available
+vector road layers. Users therefore must estimate travel speeds from
+auxiliary information, and appropriate values for a given road class may
+vary geographically. The vector road layer must be attributed with
+travel speed values before running package functions. Raster cells
+containing more than one road segment, or part of a segment, inherit the
+highest travel speed value among them.</p>
 <p>The cell values of the raster road layer are then used to determine
 travel distance from each road cell to any of its 8 immediate neighbors
 that are also members of the road network, analogous to a king’s move in

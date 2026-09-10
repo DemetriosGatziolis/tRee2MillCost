@@ -11,21 +11,22 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // rcpp_buildNodeDF
-DataFrame rcpp_buildNodeDF(IntegerMatrix m, double cellSize, double linearUnitFactor);
-RcppExport SEXP _tRee2MillCost_rcpp_buildNodeDF(SEXP mSEXP, SEXP cellSizeSEXP, SEXP linearUnitFactorSEXP) {
+DataFrame rcpp_buildNodeDF(IntegerMatrix m, double cellSize, double linearUnitFactor, int costType);
+RcppExport SEXP _tRee2MillCost_rcpp_buildNodeDF(SEXP mSEXP, SEXP cellSizeSEXP, SEXP linearUnitFactorSEXP, SEXP costTypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerMatrix >::type m(mSEXP);
     Rcpp::traits::input_parameter< double >::type cellSize(cellSizeSEXP);
     Rcpp::traits::input_parameter< double >::type linearUnitFactor(linearUnitFactorSEXP);
-    rcpp_result_gen = Rcpp::wrap(rcpp_buildNodeDF(m, cellSize, linearUnitFactor));
+    Rcpp::traits::input_parameter< int >::type costType(costTypeSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_buildNodeDF(m, cellSize, linearUnitFactor, costType));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_tRee2MillCost_rcpp_buildNodeDF", (DL_FUNC) &_tRee2MillCost_rcpp_buildNodeDF, 3},
+    {"_tRee2MillCost_rcpp_buildNodeDF", (DL_FUNC) &_tRee2MillCost_rcpp_buildNodeDF, 4},
     {NULL, NULL, 0}
 };
 

@@ -9,13 +9,13 @@ setCellValueToInteger(r, name)
 \arguments{
 \item{r}{spatRast object}
 
-\item{name}{filename (character) of the output integer raster}
+\item{name}{character, filename/path for the output integer raster}
 }
 \description{
 Convert a numeric raster to integer type
 }
 \details{
-The range of values in r should in 0-255. The datatype of the output
-is set to INT1U. Large rasters will be processed in tiles. TIF format is
-expected. If the file exists, it will be overwritten
+The range of values in \emph{r} should in 0-255. The data type of
+the output is set to INT1U. Large rasters will be processed in tiles. TIF
+format is expected. If the file exists, it will be overwritten
 }

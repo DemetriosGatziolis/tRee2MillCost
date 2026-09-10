@@ -2,12 +2,13 @@
 % Please edit documentation in R/tRee2MillCost_functions_20260825.R
 \name{getIsochrone}
 \alias{getIsochrone}
-\title{Get the road network part accessible from a node within specified time}
+\title{Get the road network part accessible from a node within specified time
+or distance}
 \usage{
 getIsochrone(
   graph,
   cellID,
-  maxTinHours,
+  threshold,
   label,
   PNG = FALSE,
   colRamp,
@@ -19,11 +20,13 @@ getIsochrone(
 
 \item{cellID}{numeric, road network raster cell where travel starts}
 
-\item{maxTinHours}{numeric, maximum travel time from the start node, in hours}
+\item{threshold}{numeric, maximum travel time, in hours, or travel distance,
+in kilometers, from the start node}
 
 \item{label}{character, used in the figure title and the output PNG filename}
 
-\item{PNG}{logical. If TRUE a figure of the isochrone is created in PNG format}
+\item{PNG}{logical. If TRUE, a figure of the isochrone is created in PNG
+format}
 
 \item{colRamp}{character, either "RGB" or "508". The latter ensures colors
 used in the figure are in compliance with Section 508 of the Rehabilitation
@@ -33,16 +36,18 @@ Act}
 and a 10 pixel border is added}
 }
 \value{
-spatrast object saved as 'isochrone_\if{html}{\out{<maxTinHours>}}h_\if{html}{\out{<label>}}.tif'. If
-PNG=TRUE, also a PNG figure named 'isochrone_\if{html}{\out{<maxTinHours>}}h_\if{html}{\out{<label>}}.png'
+spatrast object saved as 'isochrone_\if{html}{\out{<threshold>}}<h|km>\emph{\if{html}{\out{<label>}}.tif'.
+If PNG=TRUE, also a PNG figure named
+'isochrone}\if{html}{\out{<threshold>}}<h|km>_\if{html}{\out{<label>}}.png'
 }
 \description{
-Determines the road network components that are within a user-
-specified travel time (in hours) from a road raster cell ID, saves it in .tif
-format, and, optionally, adds it to a bitmap figure in PNG format
+Determines the road network components that are within user-
+specified travel time (in hours) or distance (in kilometers) from a road
+raster cell ID, saves it in .tif format, and, optionally, adds it to a bitmap
+figure in PNG format
 }
 \details{
-cellID refers to a cell in the road network raster used to greate
+cellID refers to a cell in the road network raster used to create
 the graph. The cellID can be determined from coordinates or raster row and
 column using \emph{terra::cellFromRowCol()} or \emph{terra::cellFromXY()}. It
 can also be determined from the graph, if the corresponding graph node ID is
@@ -54,8 +59,12 @@ cellID that is not part of the network results in an error that states 'Some
 nodes are not in the graph'.
 
 The resolution of the isochrone raster created is calculated from the graph
-object and matches the resolution of the road raster used to created the
-graph
+object and matches the resolution of the road raster used to create the graph
+
+The term [isochrone]{.underline} has been inherited from
+\emph{cppRounting::isochrone()} and does imply \emph{threshold} is
+referencing travel time. The type of cost calculation is determined by the
+\emph{costType} used in \emph{createGraph()}
 
 If a PNG figure is requested, the pixel dimensionality of the plot region
 (without the axes, legend, and title) will match the rows and columns in the
@@ -66,13 +75,16 @@ displayed by a white dot
 }
 \examples{
 \dontrun{
-rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-toPath <- system.file( "data", "mills.gpkg", package="tRee2MillCost" )
-graphPath <- system.file( "data", "graph_20m.rds", package="tRee2MillCost" )
-rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
+rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+toPath <- system.file( "extdata", "mills.gpkg", package="tRee2MillCost" )
+# with rdField specified in rasterizeRoads(), the graph should be based on
+#travel time
+graphPath <- system.file( "extdata", "graph_20m_time.rds", package="tRee2MillCost" )
+rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
 graph <- readRDS( graphPath )
 movePt2RdSegment( "road_net.tif", toPath, "movedToLocations.gpkg" )
 mills.v <- terra::vect( "movedToLocations.gpkg" )
+# pick as destination the third mill in toPath
 mill.xy <- terra::crds( mills.v[3] )
 mill.cellID <- terra::cellFromXY( terra::rast( "road_net.tif" ), mill.xy )
 getIsochrone( graph, mill.cellID, 0.5, mills.v$COMPANY_NAME[3], TRUE, "RGB", TRUE )
@@ -80,5 +92,6 @@ getIsochrone( graph, mill.cellID, 0.5, mills.v$COMPANY_NAME[3], TRUE, "RGB", TRU
 
 }
 \seealso{
-\link[terra:cellFromRowCol]{cellFromRowCol}, \link{graphNodeFromXY}, and \link{cellFromGraphNode}
+\link[terra:cellFromRowCol]{cellFromRowCol}, \link{graphNodeFromXY}, \link{cellFromGraphNode}, and
+\link[cppRouting:get_isochrone]{cppRouting::get_isochrone}
 }

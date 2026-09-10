@@ -21,7 +21,7 @@
 #' @noRd
 #'
 #' @export
-rcpp_buildNodeDF <- function(m, cellSize, linearUnitFactor) {
-    .Call(`_tRee2MillCost_rcpp_buildNodeDF`, m, cellSize, linearUnitFactor)
+rcpp_buildNodeDF <- function(m, cellSize, linearUnitFactor, costType) {
+    .Call(`_tRee2MillCost_rcpp_buildNodeDF`, m, cellSize, linearUnitFactor, costType)
 }
 

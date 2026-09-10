@@ -4,16 +4,19 @@
 \alias{createGraph}
 \title{Create a routing graph from a road network raster}
 \usage{
-createGraph(rasterName)
+createGraph(rasterName, costType)
 }
 \arguments{
-\item{rasterName}{filename (character) of the road network raster}
+\item{rasterName}{character, filename/path of the road network raster}
+
+\item{costType}{integer, 1 for travel calculations based on time, 2 for
+travel calculations based on distance}
 }
 \description{
 Relies on a raster representation of a road network
 \emph{(rasterName)} and embedded functions to create a network graph. Network
-cells all 8 immediate neighbors representing background (no road) are labeled
-orphan, are saved into a file named orphan_xxxx.gpkg, and are removed from
+cells with all 8 immediate neighbors representing background (no road) are
+labeled orphan, saved into a file named orphan_xxxx.gpkg, and removed from
 \emph{rasterName}. Segments with more than one cell each that are
 disconnected from the rest of the network are saved into a file named
 dc_xxxx.pgkg and are also removed from \emph{rasterName}
@@ -25,9 +28,9 @@ finer.
 }
 \examples{
 \dontrun{
-rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-graph <- createGraph( "road_net.tif" )
+rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+graph <- createGraph( "road_net.tif", 1 )
 }
 
 }

@@ -7,11 +7,11 @@
 maskCells(rasterName, IDs, tmpName)
 }
 \arguments{
-\item{rasterName}{filename (character) of the raster}
+\item{rasterName}{character, filename/path of the raster}
 
 \item{IDs}{numeric, vector of cell IDs}
 
-\item{tmpName}{filename (character) filename of the output raster}
+\item{tmpName}{character, filename/path of the output raster}
 }
 \description{
 Set the value of selected raster cells to NA

@@ -7,9 +7,9 @@
 connectivity(rasterName, pName)
 }
 \arguments{
-\item{rasterName}{filename (character) of the network raster}
+\item{rasterName}{character, filename/path of the network raster}
 
-\item{pName}{filename (character) of a point vector}
+\item{pName}{character, filename/path of a point vector layer}
 }
 \value{
 A console message with connectivity results
@@ -19,10 +19,10 @@ Determine if points are on value cells of a raster
 }
 \examples{
 \dontrun{
-rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-fromPath <- system.file( "data", "sample.gpkg", package="tRee2MillCost" )
-rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-graph <- createGraph( "road_net.tif" )
+rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+fromPath <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+graph <- createGraph( "road_net.tif", 1 )
 movePt2RdSegment( "road_net.tif", fromPath, "movedFromLocations.gpkg" )
 pOriginal <- terra::vect( fromPath )
 pMoved <- terra::vect( "movedFromLocations.gpkg" )

@@ -7,7 +7,7 @@
 backgroundCellValue(rasterName)
 }
 \arguments{
-\item{rasterName}{filename (character) of the raster to be evaluated}
+\item{rasterName}{character, filename/path of the raster to be evaluated}
 }
 \description{
 Function useful in fully automated processing of numerous road

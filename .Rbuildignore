@@ -1,2 +1,6 @@
-^tRee2MillCost\.Rproj$
+^.*\.Rproj$
 ^\.Rproj\.user$
+^\.positai$
+^\.claude$
+^doc$
+^Meta$

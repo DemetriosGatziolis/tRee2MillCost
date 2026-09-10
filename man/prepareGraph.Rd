@@ -2,17 +2,21 @@
 % Please edit documentation in R/tRee2MillCost_functions_20260825.R
 \name{prepareGraph}
 \alias{prepareGraph}
-\title{Create cell connectivity data frame from raster}
+\title{Create a cell connectivity data frame from raster}
 \usage{
-prepareGraph(rasterName)
+prepareGraph(rasterName, costType)
 }
 \arguments{
-\item{rasterName}{filename (character) of a road network raster}
+\item{rasterName}{character, filename/path of a road network raster}
+
+\item{costType}{integer, 1 for travel calculations based on time, 2 for
+travel calculations based on distance}
 }
 \value{
 data frame with three columns. The first two are the IDs of cell
-pairs, as inherited from the raster. The third column is the cost, in
-seconds, to travel between the cell centers
+pairs, as inherited from the raster. The third column is the transition cost
+between the centers of paired cells, either as travel time in seconds, if
+\emph{costType} = 1, or the planar distance in meters, if \emph{costType} = 2
 }
 \description{
 Uses a raster representing a road network to create a data frame
@@ -20,17 +24,17 @@ featuring adjacent, and therefore connected, pairs of cells and calculates
 the transition cost for each pair
 }
 \details{
-The raster is expected to represent the road network speed limit, in
-miles per hour. Although integers, the cell IDs in the output are of
-numeric type, to prevent numerical overflow issues with rasters comprising
-more than 2^31-1 cells. The output of this function is subsequently used to
-create a graph on which all travel cost (time) computations are performed
+If \emph{costType} = 1, value cells of the raster are expected to
+represent travel speed in miles per hour. Although integers, the cell IDs
+in the output data frame are of numeric type, to prevent numerical overflow
+issues with rasters comprising more than 2^31-1 cells. The output of this
+function is used by \emph{createGraph}()
 }
 \examples{
 \dontrun{
-rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-df <- prepareGraph( "road_net.tif" )
+rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+df <- prepareGraph( "road_net.tif", 1 )
 head( df )
 }
 

@@ -4,36 +4,42 @@
 \alias{rasterizeRoads}
 \title{Rasterize a line vector file}
 \usage{
-rasterizeRoads(shpName, shpField, resolution, rasterName)
+rasterizeRoads(shpName, resolution, rasterName, shpField = "")
 }
 \arguments{
-\item{shpName}{filename (character) of a line vector}
-
-\item{shpField}{name (character) of column expected to be present in
-\emph{shpName}}
+\item{shpName}{character, filename/path of a line vector}
 
 \item{resolution}{numeric, the resolution of the raster to be created}
 
-\item{rasterName}{filename (character) of the raster to be created}
+\item{rasterName}{character, filename/path of the raster to be created}
+
+\item{shpField}{character, optional, name of column in \emph{shpName}}
 }
 \description{
 Rasterize a line vector file
 }
 \details{
-\emph{shpName} is expected to a vector (line) representation of the
-road network. Cells of the output raster overlapping more than one line
-segments inherit the highest \emph{shpField} value. \emph{shpField} must
-contain the speed limit for every line segment expressed in miles per hour
-and in the (0, 199] range. \emph{resolution} coarser than 50m (164ft) will
-induce unwarranted over-generalization of the road network. Very fine
-\emph{resolution}, finer than 5m, can lead to a very large raster and routing
-graph and likely yield numerous disconnected segments. If \emph{rasterName}
-exists, it will be overwritten. TIFF format is expected. Datatype will be set
-to INT1U with NODATA cell values set to 255
+\emph{shpName} is expected to be a vector (line) layer representing
+the road network. If \emph{rasterName} is expected to be for calculations
+based on travel speed, \emph{shpField} must be specified, and provide speed
+values in the (0,200] range and in miles per hour for each road segment. A
+cell with more than one road segment present would inherit the highest
+\emph{shpField} value. If \emph{shpField} is missing, travel cost
+computations will be based on distance and all on-network cells will get a
+value of 1.
+
+\emph{resolution} coarser than 50m (164ft) will induce unwarranted
+over-generalization of the road network. Conversely, a very fine
+\emph{resolution}, finer than 5m, can create a very large raster and routing
+graph with numerous disconnected segments. These 'coarse' or 'fine'
+\emph{resolution} thresholds have been determined empirically
+
+If \emph{rasterName} exists, it will be overwritten. TIFF format is expected.
+Data type will be set to INT1U and NODATA cell values to 255
 }
 \examples{
 \dontrun{
-rasterizeRoads("roads.gpkg", "MPH", 20, "road_net.tif")
+rasterizeRoads("roads.gpkg", 20, "road_net.tif", "MPH" )
 }
 
 }

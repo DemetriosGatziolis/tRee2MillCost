@@ -7,11 +7,11 @@
 movePt2RdSegment(rasterName, inName, outName)
 }
 \arguments{
-\item{rasterName}{filename (character) of the network raster}
+\item{rasterName}{character, filename/path of the road network raster}
 
-\item{inName}{filename (character) of the point vector}
+\item{inName}{character, filename/path of the point vector layer}
 
-\item{outName}{filename (character) of the moved point vector}
+\item{outName}{character, filename/path of the moved point vector layer}
 }
 \value{
 A point vector file (\emph{outName}). Includes as attribute the
@@ -19,7 +19,7 @@ coordinates of the new locations and the Euclidean distance between the
 original and moved location
 }
 \description{
-Travel cost computations are performed between locations (nodes)
+Travel cost calculations are performed between locations (nodes)
 of a graph representing the road network. Points that are not on the network
 must first move from their original location. The new location is determined
 as the one on the network closest (in 2D) to the original location.
@@ -32,10 +32,10 @@ on the console
 }
 \examples{
 \dontrun{
-rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-fromPath <- system.file( "data", "sample.gpkg", package="tRee2MillCost" )
-rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
-graph <- createGraph( "road_net.tif" )
+rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+fromPath <- system.file( "extdata", "sample.gpkg", package="tRee2MillCost" )
+rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+graph <- createGraph( "road_net.tif", 1 )
 movePt2RdSegment( "road_net.tif", fromPath, "movedFromLocations.gpkg" )
 p <- terra::vect( "movedFromLocations.gpkg" )
 head( data.frame(p) )

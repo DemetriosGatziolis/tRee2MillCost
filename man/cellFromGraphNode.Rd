@@ -21,9 +21,11 @@ the graph created from the raster. The node must exist
 }
 \examples{
 \dontrun{
-rdPath <- system.file( "data", "roads.gpkg", package="tRee2MillCost" )
-graphPath <- system.file( "data", "graph_20m.rds", package="tRee2MillCost" )
-rasterizeRoads( rdPath, "MPH", 20, "road_net.tif" )
+rdPath <- system.file( "extdata", "roads.gpkg", package="tRee2MillCost" )
+graphPath <- system.file( "extdata", "graph_20m_time.rds", package="tRee2MillCost" )
+rasterizeRoads( rdPath, 20, "road_net.tif", "MPH" )
+#' # Since rasterizeRoads() has the rdField populated the graph loaded should be
+# based on travel time
 graph <- readRDS( graphPath )
 node <- 18692
 cellID <- cellFromGraphNode( graph, node )
