@@ -1195,7 +1195,7 @@ costSummary <- function( costDF, fromName, fromField, maxMoveDistance="", travel
     }
     if( fromRemoved > 0 )
       cat("\n", fromRemoved, "'from' locations had move distance greater than", maxMoveDistance, unit.txt, "and were excluded\n\n")
-    costDF[, fromID] <- NULL
+    costDF[, as.character( fromID )] <- NULL
   }
 
   if( !missing(travelThreshold) | travelThreshold != "") {
