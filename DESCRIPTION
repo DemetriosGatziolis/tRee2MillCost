@@ -10,8 +10,8 @@ Maintainer: Demetrios Gatziolis <demetrios.gatziolis@usda.gov>
 Description: A collection of functions that support the calculation of cost for woody material transportation from forestland to processing facilities.
 License: GPL (>= 3)
 LazyLoad: yes
-URL: https://github.com/tRee2MillCost
-BubReports: https://github.com/tRee2MillCost/issues
+URL: https://github.com/demetriosgatziolis/tRee2MillCost
+BubReports: https://github.com/demetriosgatziolis/tRee2MillCost/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.1.0
