@@ -1,6 +1,6 @@
 Package: tRee2MillCost
 Version: 2.0
-Date: 2026-09-09
+Date: 2026-10-07
 Title: Road network travel cost assessment and optimization
 Authors@R: person("Demetrios", "Gatziolis", role = c("aut", "cre"),
                   email = "demetrios.gatziolis@usda.gov",

@@ -330,13 +330,24 @@ rasterizeRoads <- function ( shpName, resolution, rasterName, shpField="" ) {
   # create a raster smaller in bytes compared to one created without it.
   # Runtime does not seem to be affected much by the use of the 'co' option.
   if( !missing(shpField) & nchar(shpField) > 0 ) { # cost based on travel speed
-    sql.txt <- paste("SELECT geom,", shpField, "FROM",  sf::st_layers(shpName)$name, "ORDER BY", shpField, "ASC")
-    gdalUtilities::gdal_rasterize(shpName, rasterName, a=shpField, sql=sql.txt,
-                                  tr=c(resolution,resolution),
-                                  te=c(shp.ext[1], shp.ext[3], shp.ext[2], shp.ext[4]),
-                                  ot="Byte",
-                                  co=c("COMPRESS=DEFLATE", "TILED=YES"),
-                                  a_nodata = 255)
+    tryCatch(
+      {
+        sql.txt <- paste0( "SELECT * FROM ", sf::st_layers(shpName)$name, " ORDER BY ", shpField, " ASC" )
+        gdalUtilities::gdal_rasterize(shpName, rasterName, a=shpField,
+                                      sql=sql.txt,
+                                      tr=c(resolution,resolution),
+                                      te=c(shp.ext[1], shp.ext[3], shp.ext[2], shp.ext[4]),
+                                      ot="Byte",
+                                      co=c("COMPRESS=DEFLATE", "TILED=YES"),
+                                      a_nodata = 255)
+      },
+      error = function(e) {
+        r <- terra::rasterize(shp, r, field=shpField, fun=max, touches=FALSE,
+                              filename=rasterName, background=255,
+                              wopt=list(datatype="INT1U", NAflag=255),
+                              overwrite=TRUE)
+      }
+    )
   } else { # cost based on travel distance
     gdalUtilities::gdal_rasterize(shpName, rasterName,
                                   burn=1,
@@ -347,7 +358,6 @@ rasterizeRoads <- function ( shpName, resolution, rasterName, shpField="" ) {
                                   a_nodata = 255)
   }
 
-  #r <- terra::rasterize( shp, r, field=shpField, fun=max, touches=FALSE, filename=rasterName, background=255, wopt=list(datatype="INT1U", NAflag=255), overwrite=T )
   cat( "\nrasterizeRoads(): Output saved as", rasterName ); flush.console()
   cat( paste( "\nrasterizeRoads(): Completed in", reportTime( startTime, Sys.time() ), "\n\n" ) )
 }
@@ -626,7 +636,7 @@ createGraph <- function( rasterName, costType ) {
     diffIDs     <- setdiff( cellIDs, graph$coords$nodeIDs )
     tmpName     <- paste0( "orphan_", basename(tempfile()), ".gpkg" )
     orphanMat   <- terra::xyFromCell( terra::rast(rasterName), diffIDs )
-    orphanP     <- terra::vect( orphanMat, type="points", crs=crs(rast(rasterName)) )
+    orphanP     <- terra::vect( orphanMat, type="points", crs=terra::crs(terra::rast(rasterName)) )
     terra::writeVector( orphanP, tmpName )
     cat( "\ncreateGraph(): Orphan nodes saved to", tmpName ); flush.console()
     cat( "\ncreateGraph(): removing", length(diffIDs), "orphan graph nodes ..." ); flush.console()
