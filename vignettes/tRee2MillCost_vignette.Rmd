@@ -2,7 +2,7 @@
 title: "tRee2MillCost"
 author: "Demetrios Gatziolis"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_document
+output: rmarkdown::pdf_document
 vignette: >
   %\VignetteIndexEntry{tRee2MillCost}
   %\VignetteEngine{knitr::rmarkdown}
