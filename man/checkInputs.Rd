@@ -16,7 +16,7 @@ checkInputs(
   movedToName,
   movedFromName,
   costType,
-  costCSVName
+  costFilename
 )
 }
 \arguments{
@@ -56,7 +56,7 @@ network. Geopackage format is expected}
 \item{costType}{integer, 1 for travel calculations based on time, 2 for
 travel calculations based on distance}
 
-\item{costCSVName}{character, filename/path of the travel cost matrix between
+\item{costFilename}{character, filename/path of the travel cost matrix between
 travel origins and destinations. .csv extension is expected}
 }
 \description{
@@ -101,7 +101,7 @@ roadRasterName = "road_net.tif"
 movedToName   <- "moved_mills.gpkg"
 movedFromName <- "moved_roads.gpkg"
 costType      <- 1 # cost as travel time
-costCSVName   <- "cost_matrix.csv"
+costFilename   <- "cost_matrix.csv"
 
 checkInputs( rdName, rdField,
              toName, toField,
@@ -109,7 +109,7 @@ checkInputs( rdName, rdField,
              rasterResolution,
              roadRasterName,
              movedToName, movedFromName,
-             costType, costCSVName )
+             costType, costFilename )
 }
 
 }

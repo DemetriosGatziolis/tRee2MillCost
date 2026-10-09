@@ -2,7 +2,7 @@
 title: "tRee2MillCost"
 author: "Demetrios Gatziolis"
 date: "`r Sys.Date()`"
-output: rmarkdown::pdf_document
+output: rmarkdown::word_document
 vignette: >
   %\VignetteIndexEntry{tRee2MillCost}
   %\VignetteEngine{knitr::rmarkdown}
@@ -175,18 +175,20 @@ rasterResolution <- 20
 costType       <- 1 # travel calculations for fastest travel time
 
 # Specify outputs
+# roadRasterPath must have .tif file extension
 roadRasterPath <- "road_net.tif"
 movedFromPath  <- "moved_plots.gpkg"
 movedToPath    <- "moved_mills.gpkg"
-costCSVpath    <- "cost_matrix.csv"
+costFilePath   <- "cost_matrix.csv"
 
-# Determine validity of inputs. Evaluate any warnings and decide if you want
+# Determine validity of inputs. Address errors and evaluate warnings, if any, 
+# before preceeding
 # to proceed
 checkInputs( rdPath, rdField, toPath, toField, fromPath, fromField,
              rasterResolution, roadRasterPath,
              movedToPath, movedFromPath,
              costType,
-             costCSVpath )
+             costFilePath )
 
 # Convert the vector representation of the road network to raster
 # Specify rdField so that future cost computations will be travel time-based
@@ -221,7 +223,7 @@ cost.df <- calculateCost( graph,
                           movedToPath, toField )
 
 # Save the cost matrix to the disk
-write.csv( cost.df, costCSVpath, row.names=FALSE )
+write.csv( cost.df, costFilePath, row.names=FALSE )
 ```
 
 ```{r}

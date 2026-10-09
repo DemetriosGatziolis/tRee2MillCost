@@ -36,7 +36,7 @@
 #' network. Geopackage format is expected
 #' @param costType integer, 1 for travel calculations based on time, 2 for
 #' travel calculations based on distance
-#' @param costCSVName character, filename/path of the travel cost matrix between
+#' @param costFilename character, filename/path of the travel cost matrix between
 #' travel origins and destinations. .csv extension is expected
 #'
 #' @details The values in \emph{toField} and \emph{fromField} must be unique. If
@@ -69,7 +69,7 @@
 #' movedToName   <- "moved_mills.gpkg"
 #' movedFromName <- "moved_roads.gpkg"
 #' costType      <- 1 # cost as travel time
-#' costCSVName   <- "cost_matrix.csv"
+#' costFilename   <- "cost_matrix.csv"
 #'
 #' checkInputs( rdName, rdField,
 #'              toName, toField,
@@ -77,7 +77,7 @@
 #'              rasterResolution,
 #'              roadRasterName,
 #'              movedToName, movedFromName,
-#'              costType, costCSVName )
+#'              costType, costFilename )
 #' }
 #'
 #' @export
@@ -87,16 +87,15 @@ checkInputs <- function( rdName, rdField,
                          rasterResolution, roadRasterName,
                          movedToName, movedFromName,
                          costType,
-                         costCSVName ) {
+                         costFilename ) {
 
   ## input spatial info
   s      <- c( rdName, toName, fromName )
-  sAtt   <- list( c("LINESTRING", "MULTILINESTRING"), "POINT", "POINT" )
+  sAtt   <- list( "LINE", "POINT", "POINT" )
   sNames <- c( rdField, toField, fromField )
   for( j in s ) {
     if( !file.exists(j) )
-      warning( "\n", j, " does not exist\n",
-               immediate.=TRUE, call.=FALSE )
+      stop( "\n", j, " does not exist\n" )
   }
 
   ## check if spatial inputs have .shp or .gpkg extension
@@ -107,38 +106,53 @@ checkInputs <- function( rdName, rdField,
   }
 
   ## input fields and projection
-  compareList <- list()
+  inputList <- list()
+  # sapply( c("name", "geometry", "CRS", "driver", "attributes"),
+  #                     function(x) NULL,
+  #                     simplify = FALSE )
   for( j in 1:length(s) ) {
-    # if( toupper(tools::file_ext(s[j])) == ".SHP" )
-    #   layerName <- gsub( ".SHP", "", toupper(basename(s[j])) )
-    # if( toupper(substring(s[j], nchar(s[j])-4, nchar(s[j]))) == ".GPKG" )
-    #   layerName <- gsub( ".GPKG", "", toupper(basename(s[j])) )
-    layerName = sf::st_layers( s[j] )[1]
-    shpInfo <- sf::st_read( s[j],
-                            query=sprintf("SELECT * FROM %s LIMIT 1", layerName ),
-                            quiet=TRUE )
-    if( ( sf::st_geometry_type(shpInfo) %in% sAtt[[j]] ) == FALSE ) {
-      warning( "\n", s[j], " should be of ", paste0(sAtt[[j]], sep= " "),
-               "type but it is ", as.character(sf::st_geometry_type(shpInfo)), " \n",
-               immediate.=TRUE, call.=FALSE )
-    }
-    if( ( sNames[j] %in% names(shpInfo) == FALSE ) ) {
-      warning( "\nAttribute ", sNames[j], " does not exist in ", s[j], ". The attribute is case sensitive\n",
-               immediate.=TRUE, call.=FALSE )
-    }
-    compareList[[j]] <- shpInfo
+    inputList[[j]] <- list( name = sf::st_layers(s[j])$name,
+                            geometry = toupper(unlist(sf::st_layers(s[j])$geomtype)),
+                            CRS  = sf::st_crs(sf::st_read(s[j], query=sprintf("SELECT * FROM %s LIMIT 0", sf::st_layers(s[j])$name), quiet = TRUE)),
+                            unit = sf::st_crs(sf::st_read(s[j], query=sprintf("SELECT * FROM %s LIMIT 0", sf::st_layers(s[j])$name), quiet = TRUE))$units_gdal,
+                            driver = sf::st_layers(s[j])$driver,
+                            attributes = as.list(sf::st_read(s[j],
+                                                             query=sprintf("SELECT * FROM %s LIMIT 0", sf::st_layers(s[j])$name),
+                                                             quiet=TRUE)) )
   }
-  ## does projection support terra::linearUnits()?
-  unit <- terra::linearUnits( terra::vect(compareList[[1]]) )
-  if( (abs(unit - 0.3048) > 0.0001) & (abs(unit - 1) > 0.0001) )
-    stop( "\nUnit for ", rdName, " should be either meters or feet\n" )
 
-  if( (sf::st_crs(compareList[[1]])$input != sf::st_crs(compareList[[1]])$input) |
-      (sf::st_crs(compareList[[1]])$units != sf::st_crs(compareList[[1]])$units)    ) ## minimal test
-    warning( "\n", s[1], " and ", s[2], " do not share the same projection\n", immediate.=TRUE, call.=FALSE )
-  if( (sf::st_crs(compareList[[1]])$input != sf::st_crs(compareList[[3]])$input) |
-      (sf::st_crs(compareList[[1]])$units != sf::st_crs(compareList[[3]])$units) )
-    warning( "\n", s[1], " and ", s[3], " do not share the same projection\n", immediate.=TRUE, call.=FALSE )
+  for( j in 1:length(s) ) {
+    ## check layer data type (point, line) matches what is expected
+    if( !(grepl(sAtt[[j]], inputList[[j]][["geometry"]])) )
+      stop( "\n", s[j], " should be ", paste(sAtt[[j]], collapse= " or "),
+               " but instead it is ", inputList[[j]][["geometry"]], " \n" )
+    ## check if rdField, toField, and fromField exist in respective layers
+    if( !(sNames[j] %in% names(inputList[[j]][["attributes"]])) )
+      stop( "\nAttribute ", sNames[j], " does not exist in ", s[j], ". The attribute is case sensitive\n" )
+    ## check if layer does not have a projection -- minimal test
+    if( is.na(inputList[[j]][["CRS"]]) )
+      stop( "\n", s[j], " lacks projection information\n")
+  }
+
+  ## check if all spatial inputs have the same projection
+  if( inputList[[1]][["CRS"]] != inputList[[2]][["CRS"]] )
+    stop( "\n", s[1], " and ", s[2], " do not have the same projection\n" )
+  if( inputList[[1]][["CRS"]] != inputList[[3]][["CRS"]] )
+    stop( "\n", s[1], " and ", s[3], " do not have the same projection\n" )
+
+  ## check if all spatial input have the same linear unit
+  ## this may be a redundant test given the projection check above but it is
+  ## included for sanity
+  if( inputList[[1]][["unit"]] != inputList[[2]][["unit"]] )
+    stop( "\n", s[1], " and ", s[2], " do not have the same linear unit\n" )
+  if( inputList[[1]][["unit"]] != inputList[[3]][["unit"]] )
+    stop( "\n", s[1], " and ", s[3], " do not have the same linear unit\n" )
+
+  ## reject lat/lon degree projection
+  for( j in 1:length(s) )
+    if( inputList[[j]][["unit"]] == "degree" )
+      stop( "\n", s[j], " has an invalid linear unit, 'degree'\n" )
+
 
   ## output
   s <- c( movedToName, movedFromName )
@@ -151,36 +165,37 @@ checkInputs <- function( rdName, rdField,
 
   ## TIF, output of road rasterization
   if( toupper(tools::file_ext(roadRasterName)) != "TIF" )
-    warning( "\n", roadRasterName, " does not have the required .tif extension" )
+    stop( "\n", roadRasterName, " must be a TIF\n" )
   if( file.exists(roadRasterName) )
     warning( "\n", roadRasterName, " already exists, likely from a previous run, and will be overwritten\n", immediate.=TRUE, call.=FALSE )
-  if( file.exists(costCSVName) )
-    warning( "\n", costCSVName, " already exists, likely from a previous run, and will be overwritten\n", immediate.=TRUE, call.=FALSE )
+  if( file.exists(costFilename) )
+    warning( "\n", costFilename, " already exists, likely from a previous run, and will be overwritten\n", immediate.=TRUE, call.=FALSE )
 
   ## numeric parameters and value ranges
-  if( !is.numeric(rasterResolution) | rasterResolution <= 0.0 ) {
-    warning( "\nRaster resolution should be positive. You specified ", rasterResolution, "\n",
-             immediate.=TRUE, call.=FALSE )
-  } else {
-    if( unit == 1 ) {
-      unit.txt = "m"
-    } else {
-      unit.txt = "ft"
-    }
-    if( rasterResolution / unit < 5 )
-      warning( paste0("\nSpecified raster resolution (", rasterResolution, unit.txt, ") likely too fine\n") )
-    if( rasterResolution / unit > 50 )
-      warning( paste0("\nSpecified raster resolution (", rasterResolution, unit.txt, ") likely too coarse\n") )
+  if( !is.numeric(rasterResolution) | rasterResolution <= 0.0 )
+    stop( "\nRaster resolution should be positive. You specified ", rasterResolution, "\n" )
+  if( inputList[[1]][["unit"]] == "metre" ) {
+    unit <- 1
+    unit.txt = "m"
   }
+  if( grepl("foot", inputList[[1]][["unit"]]) ) {
+    unit <- 0.3048
+    unit.txt = "ft"
+  }
+
+  if( rasterResolution / unit < 5 )
+    warning( paste0("\nSpecified raster resolution (", rasterResolution, unit.txt, ") likely too fine\n") )
+  if( rasterResolution / unit > 50 )
+    warning( paste0("\nSpecified raster resolution (", rasterResolution, unit.txt, ") likely too coarse\n") )
 
   ## cost type
   if( !is.numeric(costType) )
-    warning( "\n costType should be numeric\n" )
+    stop( "\n costType should be numeric\n" )
   if( costType != 1 & costType != 2 )
-    warning( "\n costType should either be 1, for travel calculations in time (hours), or 2, for travel calculations in distance (kilometers)\n" )
+    stop( "\n costType should either be 1, for travel calculations in time (hours), or 2, for travel calculations in distance (kilometers)\n" )
 
   ## value uniqueness for input vector data fields
-  s       <- c( toName, fromName )
+  s       <- c( toName, fromName ) # exclude the road layer
   sFields <- c( toField, fromField )
   for( j in 1:2 ) {
     shp <- terra::vect( s[j] )
@@ -337,12 +352,13 @@ rasterizeRoads <- function ( shpName, resolution, rasterName, shpField="" ) {
                                       sql=sql.txt,
                                       tr=c(resolution,resolution),
                                       te=c(shp.ext[1], shp.ext[3], shp.ext[2], shp.ext[4]),
+                                      at=TRUE,
                                       ot="Byte",
                                       co=c("COMPRESS=DEFLATE", "TILED=YES"),
                                       a_nodata = 255)
       },
       error = function(e) {
-        r <- terra::rasterize(shp, r, field=shpField, fun=max, touches=FALSE,
+        r <- terra::rasterize(shp, r, field=shpField, fun=max, touches=TRUE,
                               filename=rasterName, background=255,
                               wopt=list(datatype="INT1U", NAflag=255),
                               overwrite=TRUE)
@@ -353,6 +369,7 @@ rasterizeRoads <- function ( shpName, resolution, rasterName, shpField="" ) {
                                   burn=1,
                                   tr=c(resolution,resolution),
                                   te=c(shp.ext[1], shp.ext[3], shp.ext[2], shp.ext[4]),
+                                  at=TRUE,
                                   ot="Byte",
                                   co=c("COMPRESS=DEFLATE", "TILED=YES"),
                                   a_nodata = 255)

@@ -78,7 +78,7 @@
                         <h4 data-toc-skip class="author">Demetrios
 Gatziolis</h4>
             
-            <h4 data-toc-skip class="date">2026-10-07</h4>
+            <h4 data-toc-skip class="date">2026-10-08</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/demetriosgatziolis/tRee2MillCost/blob/HEAD/vignettes/tRee2MillCost_vignette.Rmd" class="external-link"><code>vignettes/tRee2MillCost_vignette.Rmd</code></a></small>
       <div class="hidden name"><code>tRee2MillCost_vignette.Rmd</code></div>
@@ -277,18 +277,20 @@ raster to integer type</li>
 <span><span class="va">costType</span>       <span class="op">&lt;-</span> <span class="fl">1</span> <span class="co"># travel calculations for fastest travel time</span></span>
 <span></span>
 <span><span class="co"># Specify outputs</span></span>
+<span><span class="co"># roadRasterPath must have .tif file extension</span></span>
 <span><span class="va">roadRasterPath</span> <span class="op">&lt;-</span> <span class="st">"road_net.tif"</span></span>
 <span><span class="va">movedFromPath</span>  <span class="op">&lt;-</span> <span class="st">"moved_plots.gpkg"</span></span>
 <span><span class="va">movedToPath</span>    <span class="op">&lt;-</span> <span class="st">"moved_mills.gpkg"</span></span>
-<span><span class="va">costCSVpath</span>    <span class="op">&lt;-</span> <span class="st">"cost_matrix.csv"</span></span>
+<span><span class="va">costFilePath</span>   <span class="op">&lt;-</span> <span class="st">"cost_matrix.csv"</span></span>
 <span></span>
-<span><span class="co"># Determine validity of inputs. Evaluate any warnings and decide if you want</span></span>
+<span><span class="co"># Determine validity of inputs. Address errors and evaluate warnings, if any, </span></span>
+<span><span class="co"># before preceeding</span></span>
 <span><span class="co"># to proceed</span></span>
 <span><span class="fu"><a href="../reference/checkInputs.html">checkInputs</a></span><span class="op">(</span> <span class="va">rdPath</span>, <span class="va">rdField</span>, <span class="va">toPath</span>, <span class="va">toField</span>, <span class="va">fromPath</span>, <span class="va">fromField</span>,</span>
 <span>             <span class="va">rasterResolution</span>, <span class="va">roadRasterPath</span>,</span>
 <span>             <span class="va">movedToPath</span>, <span class="va">movedFromPath</span>,</span>
 <span>             <span class="va">costType</span>,</span>
-<span>             <span class="va">costCSVpath</span> <span class="op">)</span></span>
+<span>             <span class="va">costFilePath</span> <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Convert the vector representation of the road network to raster</span></span>
 <span><span class="co"># Specify rdField so that future cost computations will be travel time-based</span></span>
@@ -327,7 +329,7 @@ raster to integer type</li>
 <span>                          <span class="va">movedToPath</span>, <span class="va">toField</span> <span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Save the cost matrix to the disk</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span> <span class="va">cost.df</span>, <span class="va">costCSVpath</span>, row.names<span class="op">=</span><span class="cn">FALSE</span> <span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span> <span class="va">cost.df</span>, <span class="va">costFilePath</span>, row.names<span class="op">=</span><span class="cn">FALSE</span> <span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Summarize travel time for plots that moved from their original location to</span></span>
 <span><span class="co"># the road network by no more than 500m and then routed on-network to the</span></span>
@@ -338,23 +340,23 @@ raster to integer type</li>
 <span><span class="co">#&gt;  4 'from' locations had move distance greater than 500 m and were excluded</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span> <span class="va">cost.list</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">)</span></span>
 <span><span class="co">#&gt;    sampleID             COMPANY_NAME MINCOST</span></span>
-<span><span class="co">#&gt; 1   S100786 Mount Vermion Industries   0.338</span></span>
-<span><span class="co">#&gt; 2   S165231 Mount Vermion Industries   0.485</span></span>
-<span><span class="co">#&gt; 3   S268975     Pangaion Hills Fibre   0.322</span></span>
-<span><span class="co">#&gt; 4   S412863          Mt Athos Lumber   0.327</span></span>
-<span><span class="co">#&gt; 5    S_TEMP Mount Vermion Industries   0.299</span></span>
-<span><span class="co">#&gt; 6   S613778          Mt Athos Lumber   0.443</span></span>
-<span><span class="co">#&gt; 7   S713081 Mount Vermion Industries   0.481</span></span>
-<span><span class="co">#&gt; 8   S_LIDAR          Mt Athos Lumber   0.411</span></span>
-<span><span class="co">#&gt; 9   S883069 Mount Vermion Industries   0.129</span></span>
-<span><span class="co">#&gt; 10  S906742     Pangaion Hills Fibre   0.268</span></span>
-<span><span class="co">#&gt; 11  S906987     Pangaion Hills Fibre   0.224</span></span>
-<span><span class="co">#&gt; 12  S978531 Mount Vermion Industries   0.078</span></span>
+<span><span class="co">#&gt; 1   S100786 Mount Vermion Industries   0.323</span></span>
+<span><span class="co">#&gt; 2   S165231 Mount Vermion Industries   0.470</span></span>
+<span><span class="co">#&gt; 3   S268975     Pangaion Hills Fibre   0.311</span></span>
+<span><span class="co">#&gt; 4   S412863          Mt Athos Lumber   0.313</span></span>
+<span><span class="co">#&gt; 5    S_TEMP Mount Vermion Industries   0.295</span></span>
+<span><span class="co">#&gt; 6   S613778          Mt Athos Lumber   0.433</span></span>
+<span><span class="co">#&gt; 7   S713081 Mount Vermion Industries   0.465</span></span>
+<span><span class="co">#&gt; 8   S_LIDAR          Mt Athos Lumber   0.402</span></span>
+<span><span class="co">#&gt; 9   S883069 Mount Vermion Industries   0.126</span></span>
+<span><span class="co">#&gt; 10  S906742     Pangaion Hills Fibre   0.259</span></span>
+<span><span class="co">#&gt; 11  S906987     Pangaion Hills Fibre   0.215</span></span>
+<span><span class="co">#&gt; 12  S978531 Mount Vermion Industries   0.075</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span> <span class="va">cost.list</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span> <span class="op">)</span></span>
 <span><span class="co">#&gt;               COMPANY_NAME FROMCOUNT COSTMEAN COSTMEDIAN COSTSD</span></span>
-<span><span class="co">#&gt; 1 Mount Vermion Industries         6    0.302      0.318  0.171</span></span>
-<span><span class="co">#&gt; 2          Mt Athos Lumber         3    0.394      0.411  0.060</span></span>
-<span><span class="co">#&gt; 3     Pangaion Hills Fibre         3    0.271      0.268  0.049</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 Mount Vermion Industries         6    0.292      0.309  0.166</span></span>
+<span><span class="co">#&gt; 2          Mt Athos Lumber         3    0.383      0.402  0.062</span></span>
+<span><span class="co">#&gt; 3     Pangaion Hills Fibre         3    0.262      0.259  0.048</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create and plot a 30-minute isochrone raster for one of the mills</span></span>
 <span><span class="va">millName</span> <span class="op">&lt;-</span> <span class="st">"Mount Vermion Industries"</span></span>
